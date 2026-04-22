@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>茂盛管理系統</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: sans-serif; background: #f5f0e8; display: flex; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 200px; min-height: 100vh; background: #2c2016;
+  display: flex; flex-direction: column; flex-shrink: 0;
+  position: sticky; top: 0; height: 100vh;
+}
+.sidebar-logo {
+  padding: 22px 20px 18px;
+  font-size: 17px; font-weight: bold; color: #c8a84b;
+  border-bottom: 1px solid #3d3020; letter-spacing: 1px;
+}
+.sidebar-logo span { font-size: 11px; color: #888; display: block; margin-top: 3px; font-weight: normal; }
+.nav-group-label {
+  padding: 14px 16px 6px;
+  font-size: 10px; color: #666; letter-spacing: 1px; text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 20px; cursor: pointer; font-size: 14px; color: #bbb;
+  border-left: 3px solid transparent; transition: all 0.15s;
+  user-select: none;
+}
+.nav-item:hover { background: #3a2c1a; color: #e8d090; }
+.nav-item.active { background: #3d2e10; color: #c8a84b; border-left-color: #c8a84b; font-weight: 600; }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer {
+  margin-top: auto; padding: 14px 20px; border-top: 1px solid #3d3020;
+  font-size: 12px; color: #666;
+}
+
+/* ── Main ── */
+.main-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  background: white; padding: 12px 24px; border-bottom: 1px solid #e0d8cc;
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-title { font-size: 17px; font-weight: bold; color: #333; }
+.topbar-sub { font-size: 12px; color: #999; margin-left: 4px; }
+.page-content { padding: 20px 24px; flex: 1; }
+
+/* ── Search bar ── */
+.search-bar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px;
+  background: white; padding: 14px 16px; border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.search-input, .search-select, .search-date {
+  padding: 7px 11px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px;
+}
+.search-input { width: 180px; }
+.search-select { width: 120px; }
+.search-date { width: 140px; }
+.search-label { font-size: 12px; color: #666; white-space: nowrap; }
+.btn-reset { padding: 7px 14px; border: 1px solid #c8a84b; border-radius: 6px; background: white; color: #c8a84b; cursor: pointer; font-size: 13px; }
+.btn-reset:hover { background: #c8a84b; color: white; }
+
+/* ── Table ── */
+.table-wrap { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #fdf9f0; border-bottom: 2px solid #e8dfc8; border-right: 1px solid #eee; padding: 9px 7px; white-space: nowrap; color: #555; }
+td { border-bottom: 1px solid #f0ebe0; border-right: 1px solid #f5f0e8; padding: 7px 6px; text-align: center; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fffdf5; }
+
+.btn { padding: 3px 9px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-size: 12px; }
+.btn-detail { background: #fff; border-color: #c8a84b; color: #c8a84b; font-weight: bold; }
+.btn-detail:hover { background: #c8a84b; color: white; }
+.btn-view { background: none; border: none; color: #e05c5c; cursor: pointer; font-weight: bold; }
+.btn-send { background: white; border: 1px solid #aaa; }
+.btn-upload { background: #7b2d8b; color: white; border: none; border-radius: 4px; padding: 3px 9px; }
+.btn-manage { background: #7b2d8b; color: white; border: none; border-radius: 4px; padding: 3px 9px; }
+.btn-reject { background: white; border: 1px solid #aaa; }
+.btn-note { background: white; border: 1px solid #aaa; }
+.btn-audit { background: white; border: 1px solid #aaa; }
+.btn-resign { background: white; border: 1px solid #aaa; }
+
+.status-badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+.status-s { background: #b2dfdb; color: #00695c; }
+.status-a { background: #b2dfdb; color: #00695c; }
+.status-b { background: #b2dfdb; color: #00695c; }
+.status-reject { background: #ef9a9a; color: #b71c1c; }
+.link-name { color: #1565c0; cursor: pointer; text-decoration: underline; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.modal {
+  background: #f7f5ef; border-radius: 12px; padding: 0;
+  width: 100%; max-width: 960px; max-height: 90vh; overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column;
+}
+.modal-header {
+  padding: 18px 28px; background: linear-gradient(135deg, #c8a84b, #a8883b);
+  color: white; display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h2 { font-size: 18px; font-weight: 600; }
+.modal-header .modal-sub { font-size: 13px; opacity: 0.9; margin-top: 2px; }
+.modal-body { padding: 20px 28px; overflow-y: auto; flex: 1; }
+.modal-footer {
+  padding: 14px 28px; border-top: 1px solid #e0ddd2; background: white;
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+
+.detail-section {
+  background: white; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.section-title {
+  font-size: 15px; font-weight: bold; color: #444; margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 2px solid #c8a84b;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::before { content: ''; width: 4px; height: 16px; background: #c8a84b; border-radius: 2px; }
+
+.detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 24px; }
+.detail-grid.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.detail-item { display: flex; gap: 10px; align-items: baseline; font-size: 13px; }
+.detail-label { color: #888; min-width: 90px; flex-shrink: 0; }
+.detail-value { color: #333; font-weight: 500; word-break: break-all; }
+.detail-value.money { color: #b8860b; font-weight: bold; }
+.detail-value.money-red { color: #c62828; font-weight: bold; }
+.detail-value.money-green { color: #2e7d32; font-weight: bold; }
+
+.mini-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+.mini-table th { background: #faf8f0; padding: 6px 8px; border: 1px solid #e8e4d4; font-weight: 600; color: #555; }
+.mini-table td { padding: 6px 8px; border: 1px solid #eee; text-align: center; }
+
+.pay-method-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: bold; white-space: nowrap;
+}
+.pm-atm  { background: #e3f2fd; color: #1565c0; }
+.pm-conv { background: #fff8e1; color: #e65100; }
+.pm-post { background: #f3e5f5; color: #6a1b9a; }
+.pm-other { background: #eceff1; color: #546e7a; }
+
+.installment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 8px; margin-top: 6px; }
+.installment-card { border: 1px solid #e0ddd2; border-radius: 6px; padding: 8px 10px; background: #fafaf5; font-size: 12px; }
+.installment-card.paid { background: #e8f5e9; border-color: #a5d6a7; }
+.installment-card.overdue { background: #ffebee; border-color: #ef9a9a; }
+.installment-card .period { font-weight: bold; color: #333; font-size: 13px; }
+.installment-card .due { color: #888; font-size: 11px; margin: 2px 0; }
+.installment-card .amount { font-weight: bold; color: #b8860b; }
+.installment-card .chip { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; margin-left: 4px; }
+.installment-card.paid .chip { background: #2e7d32; color: white; }
+.installment-card.overdue .chip { background: #c62828; color: white; }
+.installment-card.pending .chip { background: #9e9e9e; color: white; }
+
+.blacklist-box { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 6px; font-size: 14px; }
+.blacklist-box.clean { background: #e8f5e9; border-left: 4px solid #2e7d32; color: #1b5e20; }
+.blacklist-box.flagged { background: #ffebee; border-left: 4px solid #c62828; color: #b71c1c; }
+.blacklist-box .big-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; color: white; }
+.blacklist-box.clean .big-icon { background: #2e7d32; }
+.blacklist-box.flagged .big-icon { background: #c62828; }
+.blacklist-box .bl-title { font-weight: bold; font-size: 15px; }
+.blacklist-box .bl-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+.summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.summary-card { background: #faf8f0; border-radius: 6px; padding: 10px 12px; border-left: 3px solid #c8a84b; }
+.summary-card .label { font-size: 11px; color: #888; }
+.summary-card .value { font-size: 16px; font-weight: bold; margin-top: 2px; color: #333; }
+.summary-card.red .value { color: #c62828; }
+.summary-card.green .value { color: #2e7d32; }
+.summary-card.red { border-left-color: #c62828; }
+.summary-card.green { border-left-color: #2e7d32; }
+
+.status-pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.pill-ok { background: #c8e6c9; color: #1b5e20; }
+.pill-warn { background: #fff3cd; color: #856404; }
+.pill-danger { background: #ffcdd2; color: #b71c1c; }
+.pill-neutral { background: #eceff1; color: #546e7a; }
+
+.modal-close { padding: 10px 24px; background: #c8a84b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.modal-close:hover { background: #a8883b; }
+.btn-ghost { padding: 10px 20px; background: white; color: #555; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.btn-ghost:hover { background: #f5f5f5; }
+
+.placeholder-page { padding: 60px 0; text-align: center; color: #aaa; font-size: 16px; }
+.placeholder-page .icon { font-size: 48px; margin-bottom: 12px; }
+
+/* ── 統計儀表板 ── */
+.dash-cards {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 4px;
+}
+.dash-card {
+  background: white; border-radius: 10px; padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-left: 4px solid #c8a84b;
+}
+.dash-card.green { border-left-color: #2e7d32; }
+.dash-card.red   { border-left-color: #c62828; }
+.dash-card.orange { border-left-color: #e65100; }
+.dash-card-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+.dash-card-value { font-size: 22px; font-weight: bold; color: #333; }
+.dash-card.green .dash-card-value { color: #2e7d32; }
+.dash-card.red   .dash-card-value { color: #c62828; }
+.dash-card.orange .dash-card-value { color: #e65100; }
+
+/* ── 管理頁通用 ── */
+.mgmt-toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  background: white; padding: 14px 16px; border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px;
+}
+.mgmt-toolbar .spacer { flex: 1; }
+.btn-primary { padding: 8px 16px; background: #c8a84b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.btn-primary:hover { background: #a8883b; }
+.btn-export { padding: 8px 14px; background: #2e7d32; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.btn-export:hover { background: #1b5e20; }
+.btn-sm { padding: 3px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; }
+.btn-edit { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+.btn-edit:hover { background: #bbdefb; }
+.btn-del { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+.btn-del:hover { background: #ffcdd2; }
+
+/* ── 小 Modal ── */
+.sm-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center; z-index: 200;
+}
+.sm-modal {
+  background: white; border-radius: 10px; padding: 0; width: 480px; max-width: 95%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2); overflow: hidden;
+}
+.sm-modal-header {
+  padding: 16px 22px; background: linear-gradient(135deg, #c8a84b, #a8883b);
+  color: white; font-size: 16px; font-weight: 600;
+}
+.sm-modal-body { padding: 22px; }
+.sm-modal-footer { padding: 14px 22px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+.form-row { margin-bottom: 14px; }
+.form-row label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; }
+.form-row input, .form-row textarea, .form-row select {
+  width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px;
+}
+.form-row textarea { resize: vertical; min-height: 72px; }
+.form-row input:focus, .form-row textarea:focus, .form-row select:focus {
+  outline: none; border-color: #c8a84b; box-shadow: 0 0 0 2px rgba(200,168,75,0.15);
+}
+
+/* 系統設定 */
+.settings-card { background: white; border-radius: 8px; padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.settings-card h3 { font-size: 15px; font-weight: bold; color: #444; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #c8a84b; display: flex; align-items: center; gap: 8px; }
+.settings-card h3::before { content: ''; width: 4px; height: 16px; background: #c8a84b; border-radius: 2px; }
+.setting-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.setting-row label { width: 140px; font-size: 13px; color: #666; flex-shrink: 0; }
+.setting-row input { width: 160px; padding: 7px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+.setting-row .unit { font-size: 13px; color: #888; }
+.setting-row .btn-save { padding: 7px 18px; background: #c8a84b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.setting-row .btn-save:hover { background: #a8883b; }
+.save-hint { font-size: 12px; color: #2e7d32; margin-left: 8px; }
+.product-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.product-tag {
+  display: flex; align-items: center; gap: 6px;
+  background: #fdf9f0; border: 1px solid #e8d090; border-radius: 20px;
+  padding: 5px 12px; font-size: 13px;
+}
+.product-tag .tag-del { background: none; border: none; color: #c62828; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
+.product-tag .tag-edit { background: none; border: none; color: #1565c0; cursor: pointer; font-size: 12px; padding: 0; }
+.product-add-row { display: flex; gap: 8px; margin-top: 12px; }
+.product-add-row input { flex: 1; padding: 7px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; }
+
+</style>
+</head>
+<body>
+<div id="app" style="display:flex; width:100%; min-height:100vh;">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      茂盛管理系統
+      <span>Maosheng System</span>
+    </div>
+    <div class="nav-group-label">主選單</div>
+    <div class="nav-item" :class="{active: activePage==='審核列表'}" @click="activePage='審核列表'">
+      <span class="nav-icon">📋</span>審核列表
+    </div>
+    <div class="nav-item" :class="{active: activePage==='流水帳查詢'}" @click="activePage='流水帳查詢'">
+      <span class="nav-icon">🧾</span>流水帳查詢
+    </div>
+    <div class="nav-item" :class="{active: activePage==='統計儀表板'}" @click="activePage='統計儀表板'">
+      <span class="nav-icon">📊</span>統計儀表板
+    </div>
+    <div class="nav-group-label">管理</div>
+    <div class="nav-item" :class="{active: activePage==='特約管理'}" @click="activePage='特約管理'">
+      <span class="nav-icon">🏪</span>特約管理
+    </div>
+    <div class="nav-item" :class="{active: activePage==='利率管理'}" @click="activePage='利率管理'">
+      <span class="nav-icon">💹</span>利率管理
+    </div>
+    <div class="nav-item" :class="{active: activePage==='黑名單管理'}" @click="activePage='黑名單管理'">
+      <span class="nav-icon">🚫</span>黑名單管理
+    </div>
+    <div class="nav-group-label">系統</div>
+    <div class="nav-item" :class="{active: activePage==='系統設定'}" @click="activePage='系統設定'">
+      <span class="nav-icon">⚙️</span>系統設定
+    </div>
+    <div class="sidebar-footer">v1.0.0 原型版</div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-wrap">
+    <div class="topbar">
+      <span class="topbar-title">{{ activePage }}</span>
+      <span class="topbar-sub">/ 茂盛管理系統</span>
+    </div>
+
+    <div class="page-content">
+
+      <!-- 審核列表 -->
+      <template v-if="activePage==='審核列表'">
+        <div class="search-bar">
+          <input class="search-input" v-model="search" placeholder="搜尋受理編號、申請人" />
+          <span class="search-label">審核狀態</span>
+          <select class="search-select" v-model="filterStatus">
+            <option value="">全部</option>
+            <option>S方案</option>
+            <option>A方案</option>
+            <option>B方案</option>
+            <option>不批准</option>
+          </select>
+          <span class="search-label">繳費提示</span>
+          <select class="search-select" v-model="filterPayment">
+            <option value="">全部</option>
+            <option>未審核</option>
+          </select>
+          <span class="search-label">申請人電話</span>
+          <input class="search-input" v-model="filterPhone" placeholder="輸入電話號碼" />
+          <span class="search-label">身分證</span>
+          <input class="search-input" v-model="filterIdNumber" placeholder="輸入身分證字號" />
+          <span class="search-label">申請日期</span>
+          <input class="search-date" type="text" v-model="dateFrom" placeholder="yyyy/mm/dd" maxlength="10" />
+          <span class="search-label">～</span>
+          <input class="search-date" type="text" v-model="dateTo" placeholder="yyyy/mm/dd" maxlength="10" />
+          <button class="btn-reset" @click="resetFilters">重置</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>受理編號</th>
+                <th>申請日期</th>
+                <th>特約商</th>
+                <th>申請人</th>
+                <th>手機號碼</th>
+                <th>合約</th>
+                <th>審核狀態</th>
+                <th>發送</th>
+                <th>退件</th>
+                <th>備註</th>
+                <th>錄音檔</th>
+                <th>證件審核</th>
+                <th>簽名審核</th>
+                <th>繳費提示</th>
+                <th>詳情</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in filtered" :key="row.id">
+                <td><span class="link-name" @click="openDetail(row)">{{ row.id }}</span></td>
+                <td>{{ formatDate(row.date) }}</td>
+                <td>{{ row.merchant }}</td>
+                <td><span class="link-name">{{ row.applicant }}</span></td>
+                <td>{{ row.phone }}</td>
+                <td><button class="btn btn-view">查看</button></td>
+                <td><span class="status-badge" :class="row.statusClass">{{ row.status }}</span></td>
+                <td><button class="btn btn-send" :disabled="row.sent">{{ row.sent ? '已完成' : '送出' }}</button></td>
+                <td><button class="btn btn-reject" :disabled="row.sent">退件</button></td>
+                <td><button class="btn btn-note">備註</button></td>
+                <td><button class="btn" :class="row.audioUploaded ? 'btn-manage' : 'btn-upload'">{{ row.audioUploaded ? '管理' : '上傳' }}</button></td>
+                <td><button class="btn btn-audit">審核</button></td>
+                <td><button class="btn btn-resign">重簽</button></td>
+                <td>{{ row.payment }}</td>
+                <td><button class="btn btn-detail" @click="openDetail(row)">詳情</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+
+      <!-- 黑名單管理 -->
+      <template v-if="activePage==='黑名單管理'">
+        <div class="mgmt-toolbar">
+          <span class="search-label">姓名</span>
+          <input class="search-input" v-model="blSearch" placeholder="搜尋姓名" />
+          <span class="search-label">身分證</span>
+          <input class="search-input" v-model="blIdSearch" placeholder="搜尋身分證字號" />
+          <button class="btn-reset" @click="blSearch=''; blIdSearch=''">重置</button>
+          <div class="spacer"></div>
+          <button class="btn-export" @click="exportBl">⬇ 匯出 CSV</button>
+          <button class="btn-primary" @click="openBlForm()">＋ 新增黑名單</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>姓名</th><th>身分證字號</th><th>電話</th>
+                <th>加入日期</th><th>原因</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(b, i) in filteredBl" :key="b.id">
+                <td>{{ i + 1 }}</td>
+                <td><strong>{{ b.name }}</strong></td>
+                <td>{{ b.idNumber }}</td>
+                <td>{{ b.phone }}</td>
+                <td>{{ formatDate(b.addedDate) }}</td>
+                <td style="max-width:240px; white-space:normal; text-align:left">{{ b.reason }}</td>
+                <td>
+                  <button class="btn-sm btn-edit" @click="openBlForm(b)" style="margin-right:4px">編輯</button>
+                  <button class="btn-sm btn-del" @click="deleteBl(b.id)">刪除</button>
+                </td>
+              </tr>
+              <tr v-if="filteredBl.length === 0">
+                <td colspan="7" style="color:#aaa; padding:20px">查無資料</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 黑名單 新增/編輯 Modal -->
+        <div class="sm-modal-overlay" v-if="blFormOpen" @click.self="blFormOpen=false">
+          <div class="sm-modal">
+            <div class="sm-modal-header">{{ blForm.id ? '編輯黑名單客戶' : '新增黑名單客戶' }}</div>
+            <div class="sm-modal-body">
+              <div class="form-row"><label>姓名 *</label><input v-model="blForm.name" placeholder="請輸入姓名" /></div>
+              <div class="form-row"><label>身分證字號 *</label><input v-model="blForm.idNumber" placeholder="請輸入身分證字號" /></div>
+              <div class="form-row"><label>電話</label><input v-model="blForm.phone" placeholder="請輸入電話" /></div>
+              <div class="form-row"><label>加入原因 *</label><textarea v-model="blForm.reason" placeholder="請說明加入黑名單原因"></textarea></div>
+            </div>
+            <div class="sm-modal-footer">
+              <button class="btn-ghost" @click="blFormOpen=false">取消</button>
+              <button class="modal-close" @click="saveBl" style="padding:10px 20px">儲存</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 利率管理 -->
+      <template v-if="activePage==='利率管理'">
+        <div class="mgmt-toolbar">
+          <span class="search-label">方案名稱</span>
+          <input class="search-input" v-model="rateSearch" placeholder="搜尋方案名稱" />
+          <button class="btn-reset" @click="rateSearch=''">重置</button>
+          <div class="spacer"></div>
+          <button class="btn-export" @click="exportRates">⬇ 匯出 CSV</button>
+          <button class="btn-primary" @click="openRateForm()">＋ 新增利率</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>方案名稱</th><th>適用分期數</th><th>年利率 (%)</th>
+                <th>月費率 (%)</th><th>建立日期</th><th>狀態</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r, i) in filteredRates" :key="r.id">
+                <td>{{ i + 1 }}</td>
+                <td>{{ r.name }}</td>
+                <td>{{ r.terms }} 期</td>
+                <td><strong>{{ r.rate }}%</strong></td>
+                <td>{{ (r.rate / 12).toFixed(2) }}%</td>
+                <td>{{ formatDate(r.createdDate) }}</td>
+                <td><span class="status-pill" :class="r.enabled ? 'pill-ok' : 'pill-neutral'">{{ r.enabled ? '啟用' : '停用' }}</span></td>
+                <td>
+                  <button class="btn-sm btn-edit" @click="openRateForm(r)" style="margin-right:4px">編輯</button>
+                  <button class="btn-sm btn-del" @click="deleteRate(r.id)">刪除</button>
+                </td>
+              </tr>
+              <tr v-if="filteredRates.length === 0">
+                <td colspan="8" style="color:#aaa; padding:20px">查無資料</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 利率 新增/編輯 Modal -->
+        <div class="sm-modal-overlay" v-if="rateFormOpen" @click.self="rateFormOpen=false">
+          <div class="sm-modal">
+            <div class="sm-modal-header">{{ rateForm.id ? '編輯利率方案' : '新增利率方案' }}</div>
+            <div class="sm-modal-body">
+              <div class="form-row"><label>方案名稱 *</label><input v-model="rateForm.name" placeholder="例：S方案" /></div>
+              <div class="form-row"><label>適用分期數 *</label><input type="number" v-model.number="rateForm.terms" min="1" placeholder="例：12" /></div>
+              <div class="form-row"><label>年利率 (%) *</label><input type="number" v-model.number="rateForm.rate" step="0.1" min="0" placeholder="例：12" /></div>
+              <div class="form-row">
+                <label>狀態</label>
+                <select v-model="rateForm.enabled">
+                  <option :value="true">啟用</option>
+                  <option :value="false">停用</option>
+                </select>
+              </div>
+            </div>
+            <div class="sm-modal-footer">
+              <button class="btn-ghost" @click="rateFormOpen=false">取消</button>
+              <button class="modal-close" @click="saveRate" style="padding:10px 20px">儲存</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 系統設定 -->
+      <template v-if="activePage==='系統設定'">
+        <div class="settings-card">
+          <h3>滯納金設定</h3>
+          <div class="setting-row">
+            <label>逾期天數門檻</label>
+            <input type="number" v-model.number="sysSettings.lateFeeThreshold" min="1" />
+            <span class="unit">天（超過即加收滯納金）</span>
+          </div>
+          <div class="setting-row">
+            <label>滯納金金額</label>
+            <input type="number" v-model.number="sysSettings.lateFeeAmount" min="0" step="100" />
+            <span class="unit">元（每次）</span>
+            <button class="btn-save" @click="saveSettings">儲存設定</button>
+            <span class="save-hint" v-if="settingsSaved">✓ 已儲存</span>
+          </div>
+          <div style="background:#fdf9f0; border-radius:6px; padding:10px 14px; font-size:13px; color:#666; margin-top:4px">
+            目前設定：逾期超過 <strong>{{ sysSettings.lateFeeThreshold }}</strong> 天未繳款，加收滯納金 <strong>NT$ {{ sysSettings.lateFeeAmount }}</strong> 元
+          </div>
+        </div>
+      </template>
+
+      <!-- 統計儀表板 -->
+      <template v-if="activePage==='統計儀表板'">
+        <!-- 篩選列 -->
+        <div class="mgmt-toolbar">
+          <span class="search-label">日期區間</span>
+          <input class="search-date" type="text" v-model="dashDateFrom" placeholder="yyyy/mm/dd" maxlength="10" />
+          <span class="search-label">～</span>
+          <input class="search-date" type="text" v-model="dashDateTo" placeholder="yyyy/mm/dd" maxlength="10" />
+          <button class="btn-reset" @click="dashDateFrom=''; dashDateTo=''">重置</button>
+          <div class="spacer"></div>
+          <button class="btn-export" @click="exportDash">⬇ 下載明細</button>
+        </div>
+
+        <!-- 報表卡片 -->
+        <div class="dash-cards">
+          <div class="dash-card">
+            <div class="dash-card-label">應收總額</div>
+            <div class="dash-card-value">NT$ {{ formatMoney(dashStats.totalReceivable) }}</div>
+          </div>
+          <div class="dash-card green">
+            <div class="dash-card-label">實收總額</div>
+            <div class="dash-card-value">NT$ {{ formatMoney(dashStats.totalReceived) }}</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">應收利息總額</div>
+            <div class="dash-card-value">NT$ {{ formatMoney(dashStats.totalInterestReceivable) }}</div>
+          </div>
+          <div class="dash-card green">
+            <div class="dash-card-label">實收利息總額</div>
+            <div class="dash-card-value">NT$ {{ formatMoney(dashStats.totalInterestReceived) }}</div>
+          </div>
+          <div class="dash-card" :class="dashStats.totalLateFeeReceivable > 0 ? 'red' : ''">
+            <div class="dash-card-label">應收滯納金總額</div>
+            <div class="dash-card-value">NT$ {{ formatMoney(dashStats.totalLateFeeReceivable) }}</div>
+          </div>
+          <div class="dash-card" :class="dashStats.totalLateFeeReceived > 0 ? 'orange' : ''">
+            <div class="dash-card-label">實收滯納金總額</div>
+            <div class="dash-card-value">NT$ {{ formatMoney(dashStats.totalLateFeeReceived) }}</div>
+          </div>
+        </div>
+
+        <!-- 明細表 -->
+        <div class="table-wrap" style="margin-top:16px">
+          <table>
+            <thead>
+              <tr>
+                <th>受理編號</th>
+                <th>申請日期</th>
+                <th>特約商</th>
+                <th>申請人</th>
+                <th>方案</th>
+                <th>本金</th>
+                <th>分期數</th>
+                <th>應收總額</th>
+                <th>實收總額</th>
+                <th>應收利息</th>
+                <th>實收利息</th>
+                <th>應收滯納金</th>
+                <th>實收滯納金</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in dashDetail" :key="r.id">
+                <td><span class="link-name" @click="openDetail(r._row)">{{ r.id }}</span></td>
+                <td>{{ formatDate(r.date) }}</td>
+                <td>{{ r.merchant }}</td>
+                <td>{{ r.applicant }}</td>
+                <td>{{ r.status }}</td>
+                <td>{{ formatMoney(r.principal) }}</td>
+                <td>{{ r.terms }}</td>
+                <td>{{ formatMoney(r.receivable) }}</td>
+                <td :style="r.received > 0 ? 'color:#2e7d32;font-weight:bold' : ''">{{ formatMoney(r.received) }}</td>
+                <td>{{ formatMoney(r.interestReceivable) }}</td>
+                <td :style="r.interestReceived > 0 ? 'color:#2e7d32;font-weight:bold' : ''">{{ formatMoney(r.interestReceived) }}</td>
+                <td :style="r.lateFeeReceivable > 0 ? 'color:#c62828;font-weight:bold' : ''">{{ formatMoney(r.lateFeeReceivable) }}</td>
+                <td :style="r.lateFeeReceived > 0 ? 'color:#e65100;font-weight:bold' : ''">{{ formatMoney(r.lateFeeReceived) }}</td>
+              </tr>
+              <tr v-if="dashDetail.length === 0">
+                <td colspan="13" style="color:#aaa; padding:20px">此區間無資料</td>
+              </tr>
+              <!-- 合計列 -->
+              <tr v-if="dashDetail.length > 0" style="background:#fdf9f0; font-weight:bold">
+                <td colspan="7" style="text-align:right">合計</td>
+                <td>{{ formatMoney(dashStats.totalReceivable) }}</td>
+                <td style="color:#2e7d32">{{ formatMoney(dashStats.totalReceived) }}</td>
+                <td>{{ formatMoney(dashStats.totalInterestReceivable) }}</td>
+                <td style="color:#2e7d32">{{ formatMoney(dashStats.totalInterestReceived) }}</td>
+                <td :style="dashStats.totalLateFeeReceivable>0?'color:#c62828':''">{{ formatMoney(dashStats.totalLateFeeReceivable) }}</td>
+                <td :style="dashStats.totalLateFeeReceived>0?'color:#e65100':''">{{ formatMoney(dashStats.totalLateFeeReceived) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+
+      <!-- 其他頁面（佔位） -->
+      <template v-if="activePage!=='審核列表' && activePage!=='黑名單管理' && activePage!=='利率管理' && activePage!=='系統設定' && activePage!=='統計儀表板'">
+        <div class="placeholder-page">
+          <div class="icon">🚧</div>
+          <div>「{{ activePage }}」頁面開發中</div>
+        </div>
+      </template>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-wrap -->
+
+  <!-- 詳情 Modal -->
+  <div class="modal-overlay" v-if="selected" @click.self="selected = null">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2>申請明細 — {{ selected.id }}</h2>
+          <div class="modal-sub">{{ selected.merchant }} ／ {{ selected.applicant }}</div>
+        </div>
+        <span class="status-badge" :class="selected.statusClass">{{ selected.status }}</span>
+      </div>
+
+      <div class="modal-body">
+        <!-- 基本資料 -->
+        <div class="detail-section">
+          <div class="section-title">基本資料</div>
+          <div class="detail-grid cols-3">
+            <div class="detail-item"><span class="detail-label">受理編號</span><span class="detail-value">{{ selected.id }}</span></div>
+            <div class="detail-item"><span class="detail-label">申請日期</span><span class="detail-value">{{ formatDate(selected.date) }}</span></div>
+            <div class="detail-item"><span class="detail-label">特約商</span><span class="detail-value">{{ selected.merchant }}</span></div>
+            <div class="detail-item"><span class="detail-label">申請人</span><span class="detail-value">{{ selected.applicant }}</span></div>
+            <div class="detail-item"><span class="detail-label">手機號碼</span><span class="detail-value">{{ selected.phone }}</span></div>
+            <div class="detail-item"><span class="detail-label">身分證字號</span><span class="detail-value">{{ selected.idNumber }}</span></div>
+            <div class="detail-item"><span class="detail-label">合約</span><span class="detail-value"><button class="btn btn-view" style="padding:2px 8px">查看合約</button></span></div>
+            <div class="detail-item"><span class="detail-label">審核狀態</span><span class="detail-value"><span class="status-badge" :class="selected.statusClass">{{ selected.status }}</span></span></div>
+            <div class="detail-item">
+              <span class="detail-label">發送狀態</span>
+              <span class="detail-value"><span class="status-pill" :class="selected.sent ? 'pill-ok' : 'pill-warn'">{{ selected.sent ? '已完成' : '待送出' }}</span></span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">退件狀態</span>
+              <span class="detail-value"><span class="status-pill" :class="selected.rejected ? 'pill-danger' : 'pill-neutral'">{{ selected.rejected ? '已退件' : '未退件' }}</span></span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">錄音檔</span>
+              <span class="detail-value"><span class="status-pill" :class="selected.audioUploaded ? 'pill-ok' : 'pill-neutral'">{{ selected.audioUploaded ? '已上傳' : '未上傳' }}</span></span>
+            </div>
+            <div class="detail-item" style="grid-column:span 3">
+              <span class="detail-label">備註內容</span>
+              <span class="detail-value">{{ selected.note || '（無）' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 黑名單 -->
+        <div class="detail-section">
+          <div class="section-title">黑名單狀態</div>
+          <div class="blacklist-box" :class="selected.blacklisted ? 'flagged' : 'clean'">
+            <div class="big-icon">{{ selected.blacklisted ? '!' : '✓' }}</div>
+            <div>
+              <div class="bl-title">{{ selected.blacklisted ? '此客戶列入黑名單' : '非黑名單客戶' }}</div>
+              <div class="bl-sub">{{ selected.blacklisted ? ('原因：' + (selected.blacklistReason || '未填寫')) : '系統比對結果：無逾期紀錄、無警示' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 財務摘要 -->
+        <div class="detail-section">
+          <div class="section-title">財務摘要</div>
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="label">應收款項</div>
+              <div class="value">NT$ {{ formatMoney(finance.totalReceivable) }}</div>
+            </div>
+            <div class="summary-card green">
+              <div class="label">實收款項</div>
+              <div class="value">NT$ {{ formatMoney(finance.totalReceived) }}</div>
+            </div>
+            <div class="summary-card">
+              <div class="label">利息費用</div>
+              <div class="value">NT$ {{ formatMoney(finance.totalInterest) }}</div>
+            </div>
+            <div class="summary-card" :class="finance.lateFee > 0 ? 'red' : ''">
+              <div class="label">滯納金{{ finance.lateFee > 0 ? '（本期加收）' : '' }}</div>
+              <div class="value">NT$ {{ formatMoney(finance.lateFee) }}</div>
+            </div>
+          </div>
+          <div class="detail-grid cols-3">
+            <div class="detail-item"><span class="detail-label">貸款本金</span><span class="detail-value money">NT$ {{ formatMoney(selected.principal) }}</span></div>
+            <div class="detail-item"><span class="detail-label">年利率</span><span class="detail-value">{{ selected.rate }}%</span></div>
+            <div class="detail-item"><span class="detail-label">分期數</span><span class="detail-value">{{ selected.terms }} 期</span></div>
+            <div class="detail-item"><span class="detail-label">每期應繳</span><span class="detail-value money">NT$ {{ formatMoney(selected.monthlyPayment) }}</span></div>
+            <div class="detail-item"><span class="detail-label">已繳期數</span><span class="detail-value money-green">{{ finance.paidCount }} / {{ selected.terms }}</span></div>
+            <div class="detail-item"><span class="detail-label">逾期期數</span><span class="detail-value money-red">{{ finance.overdueCount }}</span></div>
+          </div>
+        </div>
+
+        <!-- 虛擬帳號 & 匯款記錄 -->
+        <div class="detail-section">
+          <div class="section-title">虛擬帳號 &amp; 匯款記錄</div>
+          <div class="detail-grid" style="margin-bottom:12px">
+            <div class="detail-item"><span class="detail-label">虛擬帳號</span><span class="detail-value">{{ selected.virtualAccount }}</span></div>
+            <div class="detail-item"><span class="detail-label">代收銀行</span><span class="detail-value">{{ selected.virtualBank }}</span></div>
+          </div>
+          <table class="mini-table" v-if="selected.remittances && selected.remittances.length">
+            <thead>
+              <tr>
+                <th>序號</th><th>匯款日期</th><th>匯款金額</th><th>對應期數</th><th>付款方式</th><th>備註</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r, i) in selected.remittances" :key="i">
+                <td>{{ i + 1 }}</td>
+                <td>{{ formatDate(r.date) }}</td>
+                <td style="color:#2e7d32; font-weight:bold">NT$ {{ formatMoney(r.amount) }}</td>
+                <td>第 {{ r.period }} 期</td>
+                <td><span class="pay-method-badge" :class="payMethodClass(r.payMethod)">{{ r.payMethod || '—' }}</span></td>
+                <td>{{ r.note || '—' }}</td>
+              </tr>
+              <tr>
+                <td colspan="3" style="text-align:right; font-weight:bold; background:#faf8f0">合計</td>
+                <td colspan="3" style="text-align:left; color:#2e7d32; font-weight:bold; background:#faf8f0">NT$ {{ formatMoney(finance.totalReceived) }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-else style="color:#999; font-size:13px; padding:8px 0">尚無匯款紀錄</div>
+        </div>
+
+        <!-- 分期明細 -->
+        <div class="detail-section">
+          <div class="section-title">分期明細（年利率 {{ selected.rate }}% ／ 共 {{ selected.terms }} 期）</div>
+          <div class="installment-grid">
+            <div v-for="inst in finance.installmentsWithStatus" :key="inst.no"
+                 class="installment-card" :class="inst.statusClass">
+              <div class="period">第 {{ inst.no }} 期<span class="chip">{{ inst.statusText }}</span></div>
+              <div class="due">到期：{{ formatDate(inst.dueDate) }}</div>
+              <div class="amount">NT$ {{ formatMoney(inst.amount) }}</div>
+              <div v-if="inst.paid" style="font-size:11px; color:#2e7d32; margin-top:2px">已繳 {{ formatDate(inst.paidDate) }}</div>
+              <div v-else-if="inst.overdue" style="font-size:11px; color:#c62828; margin-top:2px">
+                逾期 {{ inst.overdueDays }} 天<span v-if="inst.overdueDays > 3">（+滯納金 500）</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" @click="selected = null">關閉</button>
+        <button class="modal-close" @click="selected = null">確認</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#app -->
+
+<script>
+const { createApp, ref, computed } = Vue;
+createApp({
+  setup() {
+    const activePage = ref('審核列表');
+    const search = ref('');
+    const filterStatus = ref('');
+    const filterPayment = ref('');
+    const filterPhone = ref('');
+    const filterIdNumber = ref('');
+    const dateFrom = ref('');
+    const dateTo = ref('');
+    const selected = ref(null);
+
+    const TODAY = '2026-04-22';
+
+    function makeInstallments(startDate, terms, amount, paidCount) {
+      const [y, m, d] = startDate.split('-').map(Number);
+      const list = [];
+      for (let i = 0; i < terms; i++) {
+        const due = new Date(y, m - 1 + i + 1, d);
+        const dueStr = `${due.getFullYear()}-${String(due.getMonth()+1).padStart(2,'0')}-${String(due.getDate()).padStart(2,'0')}`;
+        const paid = i < paidCount;
+        const paidDate = paid
+          ? `${due.getFullYear()}-${String(due.getMonth()+1).padStart(2,'0')}-${String(Math.max(1, d-1)).padStart(2,'0')}`
+          : null;
+        list.push({ no: i + 1, dueDate: dueStr, amount, paid, paidDate });
+      }
+      return list;
+    }
+
+    function makeRemittances(startDate, paidCount, amount) {
+      const [y, m, d] = startDate.split('-').map(Number);
+      const list = [];
+      for (let i = 0; i < paidCount; i++) {
+        const dt = new Date(y, m - 1 + i + 1, Math.max(1, d - 1));
+        const s = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')} 14:30:00`;
+        list.push({ date: s, amount, period: i + 1, payMethod: 'ATM', note: '' });
+      }
+      return list;
+    }
+
+    function buildRow(base) {
+      const principal = base.principal;
+      const rate = base.rate;
+      const terms = base.terms;
+      const totalInterest = Math.round(principal * rate / 100 * (terms / 12));
+      const monthlyPayment = Math.round((principal + totalInterest) / terms);
+      const installments = makeInstallments(base.date, terms, monthlyPayment, base.paidCount || 0);
+      const remittances = [
+        ...makeRemittances(base.date, base.paidCount || 0, monthlyPayment),
+        ...(base.extraRemittances || []),
+      ];
+      return {
+        ...base,
+        principal, rate, terms, monthlyPayment,
+        installments, remittances,
+        virtualAccount: base.virtualAccount || ('8124-' + (Math.floor(Math.random() * 9e9) + 1e9)),
+        virtualBank: base.virtualBank || '玉山銀行 (808)',
+      };
+    }
+
+    const rawRows = [
+      { id: '202604200001', date: '2026-04-20', merchant: '台中群佳車業-S',  applicant: '羅兆宸', phone: '0986281992', idNumber: 'A123456789', status: 'S方案',  statusClass: 'status-s',      sent: false, rejected: false, audioUploaded: false, payment: '未審核', note: '',       principal: 30000, rate: 12, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
+      { id: '202604200002', date: '2026-04-20', merchant: '台中群佳車業001',  applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '資料不齊', principal: 50000, rate: 15, terms: 18, paidCount: 0, blacklisted: true,  blacklistReason: '過去有逾期紀錄超過 90 天' },
+      { id: '202604170001', date: '2026-04-17', merchant: '台中森宇-A',       applicant: '林聖棻', phone: '0970817737', idNumber: 'C345678901', status: 'A方案',  statusClass: 'status-a',      sent: true,  rejected: false, audioUploaded: true,  payment: '0/18',  note: '',       principal: 60000, rate: 13, terms: 18, paidCount: 0, blacklisted: false, blacklistReason: '' },
+      { id: '202604160001', date: '2026-04-16', merchant: '台中森宇-A',       applicant: '林聖棻', phone: '0970817737', idNumber: 'C345678901', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '重複申請', principal: 40000, rate: 13, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
+      { id: '202603270001', date: '2026-03-27', merchant: '鷹村工廠(A)',       applicant: '孫翊庭', phone: '0955520690', idNumber: 'D456789012', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '',       principal: 25000, rate: 14, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
+      { id: '202603260001', date: '2026-03-26', merchant: '鷹村工廠(S)',       applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'S方案',  statusClass: 'status-s',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 35000, rate: 12, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '' },
+      { id: '202603250001', date: '2026-03-25', merchant: '手機分期',          applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'B方案',  statusClass: 'status-b',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 18000, rate: 16, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
+      { id: '202603250002', date: '2026-03-25', merchant: '鷹村工廠(B)',       applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'B方案',  statusClass: 'status-b',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 22000, rate: 16, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '' },
+      { id: '202603230001', date: '2026-03-23', merchant: '鷹村工廠(A)',       applicant: '覃德威', phone: '0966587350', idNumber: 'E567890123', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '',       principal: 30000, rate: 14, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
+      { id: '202603190001', date: '2026-03-19', merchant: '鷹村工廠(S)',       applicant: '張軒維', phone: '0905687733', idNumber: 'F678901234', status: 'S方案',  statusClass: 'status-s',      sent: true,  rejected: false, audioUploaded: true,  payment: '0/12',  note: '',       principal: 45000, rate: 12, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '',
+        extraRemittances: [
+          { date: '2026-05-01 09:05:11', amount: 4250, period: 2,  payMethod: '臨櫃',      note: '' },
+          { date: '2026-05-08 10:22:47', amount: 4250, period: 3,  payMethod: 'ATM',       note: '' },
+          { date: '2026-05-15 13:44:02', amount: 4250, period: 4,  payMethod: 'EATM',      note: '' },
+          { date: '2026-05-22 08:30:59', amount: 4250, period: 5,  payMethod: '語音',      note: '' },
+          { date: '2026-05-29 17:10:33', amount: 4250, period: 6,  payMethod: '匯款',      note: '' },
+          { date: '2026-06-05 11:55:20', amount: 4250, period: 7,  payMethod: '網銀',      note: '' },
+          { date: '2026-06-12 14:08:45', amount: 4250, period: 8,  payMethod: '全國繳費網', note: '' },
+          { date: '2026-06-19 09:33:17', amount: 4250, period: 9,  payMethod: '7-11',      note: '' },
+          { date: '2026-06-26 16:21:04', amount: 4250, period: 10, payMethod: '全家',      note: '' },
+          { date: '2026-07-03 10:47:38', amount: 4250, period: 11, payMethod: '萊爾富',    note: '' },
+          { date: '2026-07-10 15:02:53', amount: 4250, period: 12, payMethod: 'OK',        note: '' },
+          { date: '2026-07-17 12:19:06', amount: 4250, period: 12, payMethod: '郵局',      note: '' },
+        ]
+      },
+    ];
+
+    const rows = rawRows.map(buildRow);
+
+    const filtered = computed(() =>
+      rows.filter(r => {
+        if (search.value && !r.id.includes(search.value) && !r.applicant.includes(search.value)) return false;
+        if (filterStatus.value && r.status !== filterStatus.value) return false;
+        if (filterPayment.value && r.payment !== filterPayment.value) return false;
+        if (filterPhone.value && !r.phone.includes(filterPhone.value.trim())) return false;
+        if (filterIdNumber.value && !r.idNumber.toUpperCase().includes(filterIdNumber.value.trim().toUpperCase())) return false;
+        if (dateFrom.value && r.date < toIso(dateFrom.value)) return false;
+        if (dateTo.value && r.date > toIso(dateTo.value)) return false;
+        return true;
+      })
+    );
+
+    function resetFilters() {
+      search.value = ''; filterStatus.value = ''; filterPayment.value = '';
+      filterPhone.value = ''; filterIdNumber.value = '';
+      dateFrom.value = ''; dateTo.value = '';
+    }
+
+    function openDetail(row) { selected.value = row; }
+
+    const ATM_METHODS = new Set(['ATM', '臨櫃', 'EATM', '語音', '匯款', '網銀', '全國繳費網']);
+    const CONV_METHODS = new Set(['7-11', '全家', '萊爾富', 'OK']);
+    function payMethodClass(m) {
+      if (!m) return 'pm-other';
+      if (ATM_METHODS.has(m)) return 'pm-atm';
+      if (CONV_METHODS.has(m)) return 'pm-conv';
+      if (m === '郵局') return 'pm-post';
+      return 'pm-other';
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      return String(d).slice(0, 10).replace(/-/g, '/');
+    }
+
+    function toIso(d) {
+      if (!d) return '';
+      return String(d).trim().replace(/\//g, '-');
+    }
+
+    function formatMoney(n) {
+      if (n == null || isNaN(n)) return '0';
+      return Number(n).toLocaleString('zh-TW');
+    }
+
+    function diffDays(aStr, bStr) {
+      return Math.floor((new Date(aStr) - new Date(bStr)) / 86400000);
+    }
+
+    const finance = computed(() => {
+      const s = selected.value;
+      if (!s) return {};
+      const installmentsWithStatus = (s.installments || []).map(inst => {
+        if (inst.paid) return { ...inst, overdue: false, overdueDays: 0, statusClass: 'paid', statusText: '已繳' };
+        const days = diffDays(TODAY, inst.dueDate);
+        if (days > 0) return { ...inst, overdue: true, overdueDays: days, statusClass: 'overdue', statusText: '逾期' };
+        return { ...inst, overdue: false, overdueDays: 0, statusClass: 'pending', statusText: '未繳' };
+      });
+      const paidCount = installmentsWithStatus.filter(x => x.paid).length;
+      const overdueCount = installmentsWithStatus.filter(x => x.overdue).length;
+      const lateFee = installmentsWithStatus.some(x => x.overdue && x.overdueDays > 3) ? 500 : 0;
+      const totalReceivable = s.monthlyPayment * s.terms + lateFee;
+      const totalReceived = (s.remittances || []).reduce((sum, r) => sum + r.amount, 0);
+      const totalInterest = s.monthlyPayment * s.terms - s.principal;
+      return { installmentsWithStatus, paidCount, overdueCount, lateFee, totalReceivable, totalReceived, totalInterest };
+    });
+
+    // ── 黑名單管理 ──
+    const blSearch = ref('');
+    const blIdSearch = ref('');
+    const blFormOpen = ref(false);
+    const blForm = ref({});
+    let blNextId = 4;
+
+    const blacklist = ref([
+      { id: 1, name: '吳昀達', idNumber: 'B234567890', phone: '0918103852', addedDate: '2026-01-15', reason: '過去有逾期紀錄超過 90 天，多次催繳無效' },
+      { id: 2, name: '覃德威', idNumber: 'E567890123', phone: '0966587350', addedDate: '2025-11-20', reason: '偽造身分文件申請貸款' },
+      { id: 3, name: '林大明', idNumber: 'G789012345', phone: '0912345678', addedDate: '2025-08-03', reason: '惡意拖欠，無法聯繫' },
+    ]);
+
+    const filteredBl = computed(() =>
+      blacklist.value.filter(b => {
+        if (blSearch.value && !b.name.includes(blSearch.value)) return false;
+        if (blIdSearch.value && !b.idNumber.toUpperCase().includes(blIdSearch.value.trim().toUpperCase())) return false;
+        return true;
+      })
+    );
+
+    function openBlForm(item = null) {
+      blForm.value = item
+        ? { ...item }
+        : { id: null, name: '', idNumber: '', phone: '', addedDate: TODAY, reason: '' };
+      blFormOpen.value = true;
+    }
+
+    function saveBl() {
+      if (!blForm.value.name || !blForm.value.idNumber || !blForm.value.reason) {
+        alert('請填寫姓名、身分證字號及原因'); return;
+      }
+      if (blForm.value.id) {
+        const idx = blacklist.value.findIndex(b => b.id === blForm.value.id);
+        if (idx >= 0) blacklist.value[idx] = { ...blForm.value };
+      } else {
+        blacklist.value.push({ ...blForm.value, id: blNextId++ });
+      }
+      blFormOpen.value = false;
+    }
+
+    function deleteBl(id) {
+      if (!confirm('確定要刪除此黑名單記錄？')) return;
+      blacklist.value = blacklist.value.filter(b => b.id !== id);
+    }
+
+    // ── 利率管理 ──
+    const rateSearch = ref('');
+    const rateFormOpen = ref(false);
+    const rateForm = ref({});
+    let rateNextId = 5;
+
+    const rates = ref([
+      { id: 1, name: 'S方案',    terms: 12, rate: 12, enabled: true,  createdDate: '2025-01-01' },
+      { id: 2, name: 'A方案',    terms: 18, rate: 13, enabled: true,  createdDate: '2025-01-01' },
+      { id: 3, name: 'B方案',    terms: 12, rate: 16, enabled: true,  createdDate: '2025-01-01' },
+      { id: 4, name: 'A方案(長)', terms: 24, rate: 14, enabled: false, createdDate: '2025-06-01' },
+    ]);
+
+    const filteredRates = computed(() =>
+      rates.value.filter(r => !rateSearch.value || r.name.includes(rateSearch.value))
+    );
+
+    function openRateForm(item = null) {
+      rateForm.value = item
+        ? { ...item }
+        : { id: null, name: '', terms: 12, rate: 12, enabled: true, createdDate: TODAY };
+      rateFormOpen.value = true;
+    }
+
+    function saveRate() {
+      if (!rateForm.value.name || !rateForm.value.terms || rateForm.value.rate == null) {
+        alert('請填寫方案名稱、分期數及年利率'); return;
+      }
+      if (rateForm.value.id) {
+        const idx = rates.value.findIndex(r => r.id === rateForm.value.id);
+        if (idx >= 0) rates.value[idx] = { ...rateForm.value };
+      } else {
+        rates.value.push({ ...rateForm.value, id: rateNextId++ });
+      }
+      rateFormOpen.value = false;
+    }
+
+    function deleteRate(id) {
+      if (!confirm('確定要刪除此利率方案？')) return;
+      rates.value = rates.value.filter(r => r.id !== id);
+    }
+
+    function exportBl() {
+      const header = ['姓名', '身分證字號', '電話', '加入日期', '原因'];
+      const data = filteredBl.value.map(b => [b.name, b.idNumber, b.phone, b.addedDate, b.reason]);
+      const csv = [header, ...data].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '黑名單.csv';
+      a.click();
+    }
+
+    function exportRates() {
+      const header = ['方案名稱', '分期數', '年利率(%)', '月費率(%)', '建立日期', '狀態'];
+      const rows = filteredRates.value.map(r => [
+        r.name, r.terms, r.rate, (r.rate / 12).toFixed(2), r.createdDate, r.enabled ? '啟用' : '停用'
+      ]);
+      const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '利率方案.csv';
+      a.click();
+    }
+
+    // ── 系統設定 ──
+    const sysSettings = ref({
+      lateFeeThreshold: 3,
+      lateFeeAmount: 500,
+      products: ['S方案', 'A方案', 'B方案', '手機分期', '家電分期'],
+    });
+    const settingsSaved = ref(false);
+    const newProductName = ref('');
+    const editingProductIdx = ref(-1);
+    const editingProductName = ref('');
+
+    function saveSettings() {
+      settingsSaved.value = true;
+      setTimeout(() => { settingsSaved.value = false; }, 2000);
+    }
+
+    function addProduct() {
+      const name = newProductName.value.trim();
+      if (!name) return;
+      sysSettings.value.products.push(name);
+      newProductName.value = '';
+    }
+
+    function deleteProduct(idx) {
+      sysSettings.value.products.splice(idx, 1);
+      if (editingProductIdx.value === idx) editingProductIdx.value = -1;
+    }
+
+    function startEditProduct(idx) {
+      editingProductIdx.value = idx;
+      editingProductName.value = sysSettings.value.products[idx];
+    }
+
+    function saveProductEdit(idx) {
+      const name = editingProductName.value.trim();
+      if (name) sysSettings.value.products[idx] = name;
+      editingProductIdx.value = -1;
+    }
+
+    // ── 統計儀表板 ──
+    const dashDateFrom = ref('');
+    const dashDateTo   = ref('');
+
+    function calcRowStats(row) {
+      const totalInterest = row.monthlyPayment * row.terms - row.principal;
+      const interestPerPeriod = totalInterest / row.terms;
+
+      // 逾期滯納金
+      const today = TODAY;
+      let lateFeeReceivable = 0;
+      let lateFeeReceived = 0;
+      const threshold = sysSettings.value.lateFeeThreshold;
+      const feeAmt = sysSettings.value.lateFeeAmount;
+      (row.installments || []).forEach(inst => {
+        if (!inst.paid) {
+          const days = diffDays(today, inst.dueDate);
+          if (days > threshold) { lateFeeReceivable += feeAmt; }
+        }
+      });
+      // 實收滯納金：匯款中超額部分視為已繳滯納金（簡化計算）
+      const totalReceived = (row.remittances || []).reduce((s, r) => s + r.amount, 0);
+      const paidPeriods = (row.installments || []).filter(i => i.paid).length;
+      const principalReceived = paidPeriods * row.monthlyPayment;
+      const excessReceived = Math.max(0, totalReceived - principalReceived);
+      lateFeeReceived = Math.min(excessReceived, lateFeeReceivable);
+
+      const interestReceived = paidPeriods * interestPerPeriod;
+
+      return {
+        receivable: row.monthlyPayment * row.terms + lateFeeReceivable,
+        received: totalReceived,
+        interestReceivable: totalInterest,
+        interestReceived: Math.round(interestReceived),
+        lateFeeReceivable,
+        lateFeeReceived,
+      };
+    }
+
+    const dashDetail = computed(() => {
+      return rows
+        .filter(r => {
+          if (dashDateFrom.value && r.date < toIso(dashDateFrom.value)) return false;
+          if (dashDateTo.value   && r.date > toIso(dashDateTo.value))   return false;
+          return true;
+        })
+        .map(r => ({ id: r.id, date: r.date, merchant: r.merchant, applicant: r.applicant, status: r.status, principal: r.principal, terms: r.terms, ...calcRowStats(r), _row: r }));
+    });
+
+    const dashStats = computed(() => {
+      const d = dashDetail.value;
+      return {
+        totalReceivable:          d.reduce((s, r) => s + r.receivable, 0),
+        totalReceived:            d.reduce((s, r) => s + r.received,   0),
+        totalInterestReceivable:  d.reduce((s, r) => s + r.interestReceivable, 0),
+        totalInterestReceived:    d.reduce((s, r) => s + r.interestReceived,   0),
+        totalLateFeeReceivable:   d.reduce((s, r) => s + r.lateFeeReceivable,  0),
+        totalLateFeeReceived:     d.reduce((s, r) => s + r.lateFeeReceived,    0),
+      };
+    });
+
+    function exportDash() {
+      const header = ['受理編號','申請日期','特約商','申請人','方案','本金','分期數','應收總額','實收總額','應收利息','實收利息','應收滯納金','實收滯納金'];
+      const data = dashDetail.value.map(r => [
+        r.id, r.date, r.merchant, r.applicant, r.status, r.principal, r.terms,
+        r.receivable, r.received, r.interestReceivable, r.interestReceived, r.lateFeeReceivable, r.lateFeeReceived
+      ]);
+      const total = ['合計','','','','','','',
+        dashStats.value.totalReceivable, dashStats.value.totalReceived,
+        dashStats.value.totalInterestReceivable, dashStats.value.totalInterestReceived,
+        dashStats.value.totalLateFeeReceivable, dashStats.value.totalLateFeeReceived
+      ];
+      const csv = [header, ...data, total].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const label = (dashDateFrom.value || '起') + '_' + (dashDateTo.value || '迄');
+      a.download = `統計明細_${label}.csv`;
+      a.click();
+    }
+
+    return {
+      activePage, search, filterStatus, filterPayment, filterPhone, filterIdNumber,
+      dateFrom, dateTo, filtered, selected, openDetail, resetFilters,
+      finance, formatMoney, formatDate, payMethodClass,
+      // 黑名單
+      blSearch, blIdSearch, blFormOpen, blForm, filteredBl, openBlForm, saveBl, deleteBl, exportBl,
+      // 利率
+      rateSearch, rateFormOpen, rateForm, filteredRates, openRateForm, saveRate, deleteRate, exportRates,
+      // 系統設定
+      sysSettings, settingsSaved, newProductName, editingProductIdx, editingProductName,
+      saveSettings, addProduct, deleteProduct, startEditProduct, saveProductEdit,
+      // 統計儀表板
+      dashDateFrom, dashDateTo, dashDetail, dashStats, exportDash,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
