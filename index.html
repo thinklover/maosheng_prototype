@@ -220,6 +220,27 @@ tr:hover td { background: #fffdf5; }
 .dash-card.red   .dash-card-value { color: #c62828; }
 .dash-card.orange .dash-card-value { color: #e65100; }
 
+/* ── 頁籤 ── */
+.tab-bar {
+  display: flex; gap: 0; margin-bottom: 16px;
+  border-bottom: 2px solid #e0d8cc;
+}
+.tab-btn {
+  padding: 9px 22px; font-size: 14px; cursor: pointer;
+  border: none; background: none; color: #888;
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  transition: all 0.15s; white-space: nowrap; font-weight: 500;
+}
+.tab-btn:hover { color: #c8a84b; }
+.tab-btn.active { color: #c8a84b; border-bottom-color: #c8a84b; font-weight: 700; }
+.tab-btn .tab-count {
+  display: inline-block; margin-left: 6px;
+  background: #c8a84b; color: white;
+  border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: bold;
+}
+.tab-btn.active .tab-count { background: #c8a84b; }
+.tab-btn:not(.active) .tab-count { background: #ccc; }
+
 /* ── 管理頁通用 ── */
 .mgmt-toolbar {
   display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
@@ -345,16 +366,29 @@ tr:hover td { background: #fffdf5; }
 
       <!-- 審核列表 -->
       <template v-if="activePage==='審核列表'">
+        <!-- 頁籤 -->
+        <div class="tab-bar">
+          <button class="tab-btn" :class="{active: reviewTab==='審核中'}" @click="reviewTab='審核中'; filterStatus=''">
+            審核中
+            <span class="tab-count">{{ reviewTabCount }}</span>
+          </button>
+          <button class="tab-btn" :class="{active: reviewTab==='不批准歸檔'}" @click="reviewTab='不批准歸檔'; filterStatus=''">
+            不批准歸檔
+            <span class="tab-count">{{ rejectTabCount }}</span>
+          </button>
+        </div>
+
         <div class="search-bar">
           <input class="search-input" v-model="search" placeholder="搜尋受理編號、申請人" />
-          <span class="search-label">審核狀態</span>
-          <select class="search-select" v-model="filterStatus">
-            <option value="">全部</option>
-            <option>S方案</option>
-            <option>A方案</option>
-            <option>B方案</option>
-            <option>不批准</option>
-          </select>
+          <template v-if="reviewTab==='審核中'">
+            <span class="search-label">審核狀態</span>
+            <select class="search-select" v-model="filterStatus">
+              <option value="">全部</option>
+              <option>S方案</option>
+              <option>A方案</option>
+              <option>B方案</option>
+            </select>
+          </template>
           <span class="search-label">繳費提示</span>
           <select class="search-select" v-model="filterPayment">
             <option value="">全部</option>
@@ -891,6 +925,7 @@ const { createApp, ref, computed } = Vue;
 createApp({
   setup() {
     const activePage = ref('審核列表');
+    const reviewTab = ref('審核中');
     const search = ref('');
     const filterStatus = ref('');
     const filterPayment = ref('');
@@ -978,8 +1013,15 @@ createApp({
 
     const rows = rawRows.map(buildRow);
 
+    const reviewTabCount = computed(() => rows.filter(r => r.status !== '不批准').length);
+    const rejectTabCount = computed(() => rows.filter(r => r.status === '不批准').length);
+
     const filtered = computed(() =>
       rows.filter(r => {
+        // 頁籤篩選
+        if (reviewTab.value === '審核中' && r.status === '不批准') return false;
+        if (reviewTab.value === '不批准歸檔' && r.status !== '不批准') return false;
+        // 搜尋條件
         if (search.value && !r.id.includes(search.value) && !r.applicant.includes(search.value)) return false;
         if (filterStatus.value && r.status !== filterStatus.value) return false;
         if (filterPayment.value && r.payment !== filterPayment.value) return false;
@@ -1313,7 +1355,8 @@ createApp({
     }
 
     return {
-      activePage, search, filterStatus, filterPayment, filterPhone, filterIdNumber,
+      activePage, reviewTab, reviewTabCount, rejectTabCount,
+      search, filterStatus, filterPayment, filterPhone, filterIdNumber,
       dateFrom, dateTo, filtered, selected, openDetail, resetFilters,
       finance, formatMoney, formatDate, payMethodClass,
       // 黑名單
