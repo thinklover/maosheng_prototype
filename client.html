@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>繳費查詢</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; background: #fdf6e3; font-family: 'Noto Sans TC', sans-serif; }
+
+/* ── 頂部標題列 ── */
+.top-bar {
+  background: linear-gradient(135deg, #c8a84b, #a8883b);
+  padding: 16px 20px;
+  text-align: center;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  position: sticky; top: 0; z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.top-back-btn {
+  position: absolute; left: 16px;
+  background: none; border: none; color: white;
+  font-size: 22px; cursor: pointer; padding: 0 6px;
+  line-height: 1;
+}
+
+/* ── 主卡片 ── */
+.card-wrap {
+  max-width: 480px;
+  margin: 20px auto 40px;
+  padding: 0 16px;
+}
+.card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.card-header {
+  background: linear-gradient(135deg, #c8a84b, #a8883b);
+  color: white;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-header-icon { font-size: 18px; }
+.card-body { padding: 16px 18px; }
+
+/* ── 資料列 ── */
+.info-row {
+  display: flex;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid #f5f0e8;
+  font-size: 14px;
+  gap: 10px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: #999; min-width: 84px; flex-shrink: 0; font-size: 13px; }
+.info-value { color: #333; font-weight: 500; flex: 1; word-break: break-all; }
+.info-value.highlight { color: #b8860b; font-weight: bold; font-size: 16px; }
+.info-value.danger { color: #c62828; font-weight: bold; }
+.info-value.success { color: #2e7d32; font-weight: bold; }
+
+/* ── 期數摘要卡 ── */
+.period-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 14px 18px;
+}
+.period-item {
+  text-align: center;
+  background: #fdf9f0;
+  border-radius: 8px;
+  padding: 12px 8px;
+  border: 1px solid #ede8d8;
+}
+.period-num { font-size: 24px; font-weight: bold; color: #c8a84b; }
+.period-num.green { color: #2e7d32; }
+.period-num.red { color: #c62828; }
+.period-label { font-size: 11px; color: #888; margin-top: 4px; }
+
+/* ── 金額摘要卡 ── */
+.amount-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 14px 18px;
+}
+.amount-item {
+  background: #fdf9f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  border-left: 3px solid #c8a84b;
+}
+.amount-item.green { border-left-color: #2e7d32; }
+.amount-item.red   { border-left-color: #c62828; }
+.amount-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.amount-num { font-size: 16px; font-weight: bold; color: #333; }
+.amount-item.green .amount-num { color: #2e7d32; }
+.amount-item.red .amount-num   { color: #c62828; }
+
+/* ── 繳費明細表 ── */
+.detail-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.detail-table th {
+  background: #fdf9f0; color: #666; font-weight: 600;
+  padding: 8px 10px; border-bottom: 2px solid #ede8d8;
+  text-align: center; white-space: nowrap;
+}
+.detail-table td {
+  padding: 9px 10px; border-bottom: 1px solid #f5f0e8;
+  text-align: center; color: #444;
+}
+.detail-table tr:last-child td { border-bottom: none; }
+.detail-table tr:hover td { background: #fffdf5; }
+
+.pay-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: bold;
+}
+.pm-atm  { background: #e3f2fd; color: #1565c0; }
+.pm-conv { background: #fff8e1; color: #e65100; }
+.pm-post { background: #f3e5f5; color: #6a1b9a; }
+.pm-other { background: #eceff1; color: #546e7a; }
+
+/* ── 空資料 ── */
+.empty-tip { text-align: center; color: #bbb; padding: 24px 0; font-size: 13px; }
+
+
+/* ── 借貸列表 ── */
+.loan-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border-bottom: 1px solid #f5f0e8; cursor: pointer;
+  transition: background 0.12s;
+}
+.loan-item:last-child { border-bottom: none; }
+.loan-item:hover, .loan-item:active { background: #fffdf5; }
+.loan-icon {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, #c8a84b, #a8883b);
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.loan-info { flex: 1; min-width: 0; }
+.loan-title { font-size: 14px; font-weight: bold; color: #333; }
+.loan-sub { font-size: 12px; color: #999; margin-top: 2px; }
+.loan-right { text-align: right; flex-shrink: 0; }
+.loan-amount { font-size: 15px; font-weight: bold; color: #b8860b; }
+.loan-status { font-size: 11px; margin-top: 3px; }
+.loan-status.ok { color: #2e7d32; }
+.loan-status.warn { color: #c62828; }
+.loan-arrow { color: #ccc; font-size: 18px; margin-left: 6px; }
+
+/* ── 返回按鈕 ── */
+.btn-back {
+  display: flex; align-items: center; gap: 6px;
+  background: white; border: 1px solid #c8a84b; color: #c8a84b;
+  border-radius: 8px; padding: 10px 16px; font-size: 14px;
+  cursor: pointer; margin-bottom: 14px; width: 100%;
+}
+.btn-back:hover { background: #fffdf5; }
+
+/* ── 用戶問候 ── */
+.greeting {
+  background: linear-gradient(135deg, #c8a84b22, #a8883b11);
+  border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;
+  border: 1px solid #e8d090;
+}
+.greeting-name { font-size: 17px; font-weight: bold; color: #333; }
+.greeting-sub { font-size: 13px; color: #888; margin-top: 3px; }
+
+/* ── footer ── */
+.page-footer { text-align: center; color: #bbb; font-size: 12px; padding: 10px 0 30px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <button v-if="record" class="top-back-btn" @click="record = null">←</button>
+    <span>繳費查詢</span>
+  </div>
+
+  <div class="card-wrap">
+
+    <!-- 列表頁 -->
+    <template v-if="!record">
+      <div class="greeting">
+        <div class="greeting-name">您好，{{ currentUser.applicant }} 👋</div>
+        <div class="greeting-sub">共有 {{ userLoans.length }} 筆借貸紀錄</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">📂</span>我的借貸列表</div>
+        <div v-for="(loan, i) in userLoans" :key="loan.id" class="loan-item" @click="selectLoan(loan)">
+          <div class="loan-icon">{{ i + 1 }}</div>
+          <div class="loan-info">
+            <div class="loan-title">{{ loan.id }}</div>
+            <div class="loan-sub">{{ loan.merchant }}・{{ loan.status }}・{{ loan.terms }} 期</div>
+          </div>
+          <div class="loan-right">
+            <div class="loan-amount">NT$ {{ fmt(loan.monthlyPayment) }}/期</div>
+            <div class="loan-status" :class="loan.overdueCount > 0 ? 'warn' : 'ok'">
+              {{ loan.overdueCount > 0 ? `逾期 ${loan.overdueCount} 期` : `已繳 ${loan.paidCount}/${loan.terms} 期` }}
+            </div>
+          </div>
+          <span class="loan-arrow">›</span>
+        </div>
+      </div>
+    </template>
+
+    <!-- 詳情頁 -->
+    <template v-if="record">
+      <!-- 基本資料 -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">📋</span>基本資料</div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="info-label">受理編號</span>
+            <span class="info-value">{{ record.id }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">申請人</span>
+            <span class="info-value">{{ record.applicant }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">特約商</span>
+            <span class="info-value">{{ record.merchant }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">方案</span>
+            <span class="info-value">{{ record.status }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">年利率</span>
+            <span class="info-value">{{ record.rate }}%</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">每期繳費</span>
+            <span class="info-value highlight">NT$ {{ fmt(record.monthlyPayment) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 期數摘要 -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">📅</span>期數狀態</div>
+        <div class="period-grid">
+          <div class="period-item">
+            <div class="period-num">{{ record.terms }}</div>
+            <div class="period-label">總期數</div>
+          </div>
+          <div class="period-item">
+            <div class="period-num green">{{ stats.paidCount }}</div>
+            <div class="period-label">已繳期數</div>
+          </div>
+          <div class="period-item">
+            <div class="period-num red">{{ stats.overdueCount }}</div>
+            <div class="period-label">逾期期數</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 金額摘要 -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">💰</span>金額摘要</div>
+        <div class="amount-grid">
+          <div class="amount-item">
+            <div class="amount-label">總金額</div>
+            <div class="amount-num">NT$ {{ fmt(stats.totalAmount) }}</div>
+          </div>
+          <div class="amount-item green">
+            <div class="amount-label">已繳金額</div>
+            <div class="amount-num">NT$ {{ fmt(stats.paidAmount) }}</div>
+          </div>
+          <div class="amount-item">
+            <div class="amount-label">尚餘金額</div>
+            <div class="amount-num">NT$ {{ fmt(stats.remainAmount) }}</div>
+          </div>
+          <div class="amount-item red">
+            <div class="amount-label">滯納金額</div>
+            <div class="amount-num">NT$ {{ fmt(stats.lateFeeAmount) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 繳費明細 -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">🧾</span>繳費明細</div>
+        <div style="overflow-x:auto; padding: 0 4px 4px;">
+          <table class="detail-table" v-if="record.remittances && record.remittances.length">
+            <thead>
+              <tr>
+                <th>期數</th>
+                <th>繳費時間</th>
+                <th>繳費金額</th>
+                <th>繳費方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r, i) in record.remittances" :key="i">
+                <td>第 {{ r.period }} 期</td>
+                <td style="white-space:nowrap; font-size:12px">{{ r.date }}</td>
+                <td style="color:#2e7d32; font-weight:bold">NT$ {{ fmt(r.amount) }}</td>
+                <td><span class="pay-badge" :class="pmClass(r.payMethod)">{{ r.payMethod || '—' }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty-tip" v-else>尚無繳費紀錄</div>
+        </div>
+      </div>
+
+    </template>
+
+    <div class="page-footer">茂盛管理系統 © 2026</div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed } = Vue;
+createApp({
+  setup() {
+    const lookupError = ref('');
+    const record = ref(null);
+
+    const TODAY = '2026-04-27';
+    const LATE_FEE_THRESHOLD = 3;
+    const LATE_FEE_AMOUNT = 500;
+
+    // 範例資料（對應 index.html 的 rows）
+    const database = [
+      {
+        id: '202603190001', applicant: '張軒維', phone: '0905687733',
+        merchant: '鷹村工廠(S)', status: 'S方案', rate: 12, terms: 12,
+        principal: 45000, paidCount: 1,
+        startDate: '2026-03-19',
+        remittances: [
+          { date: '2026-04-18 14:30:00', amount: 4250, period: 1,  payMethod: 'ATM' },
+          { date: '2026-05-01 09:05:11', amount: 4250, period: 2,  payMethod: '臨櫃' },
+          { date: '2026-05-08 10:22:47', amount: 4250, period: 3,  payMethod: 'ATM' },
+          { date: '2026-05-15 13:44:02', amount: 4250, period: 4,  payMethod: 'EATM' },
+          { date: '2026-05-22 08:30:59', amount: 4250, period: 5,  payMethod: '語音' },
+          { date: '2026-05-29 17:10:33', amount: 4250, period: 6,  payMethod: '匯款' },
+          { date: '2026-06-05 11:55:20', amount: 4250, period: 7,  payMethod: '網銀' },
+          { date: '2026-06-12 14:08:45', amount: 4250, period: 8,  payMethod: '全國繳費網' },
+          { date: '2026-06-19 09:33:17', amount: 4250, period: 9,  payMethod: '7-11' },
+          { date: '2026-06-26 16:21:04', amount: 4250, period: 10, payMethod: '全家' },
+          { date: '2026-07-03 10:47:38', amount: 4250, period: 11, payMethod: '萊爾富' },
+          { date: '2026-07-10 15:02:53', amount: 4250, period: 12, payMethod: 'OK' },
+        ]
+      },
+      {
+        id: '202603260001', applicant: '吳昀達', phone: '0918103852',
+        merchant: '鷹村工廠(S)', status: 'S方案', rate: 12, terms: 12,
+        principal: 35000, paidCount: 1,
+        startDate: '2026-03-26',
+        remittances: [
+          { date: '2026-04-25 10:00:00', amount: 3733, period: 1, payMethod: '網銀' },
+        ]
+      },
+    ];
+
+    function buildStats(r) {
+      const totalInterest = Math.round(r.principal * r.rate / 100 * (r.terms / 12));
+      const monthlyPayment = Math.round((r.principal + totalInterest) / r.terms);
+      const totalAmount = monthlyPayment * r.terms;
+      const paidAmount = r.remittances.reduce((s, x) => s + x.amount, 0);
+
+      // 逾期計算
+      const [y, m, d] = r.startDate.split('-').map(Number);
+      let overdueCount = 0, lateFeeAmount = 0;
+      for (let i = 0; i < r.terms; i++) {
+        const due = new Date(y, m - 1 + i + 1, d);
+        const dueStr = `${due.getFullYear()}-${String(due.getMonth()+1).padStart(2,'0')}-${String(due.getDate()).padStart(2,'0')}`;
+        const paid = i < r.paidCount;
+        if (!paid) {
+          const days = Math.floor((new Date(TODAY) - due) / 86400000);
+          if (days > 0) {
+            overdueCount++;
+            if (days > LATE_FEE_THRESHOLD) lateFeeAmount += LATE_FEE_AMOUNT;
+          }
+        }
+      }
+
+      return {
+        monthlyPayment,
+        paidCount: r.paidCount,
+        overdueCount,
+        totalAmount,
+        paidAmount,
+        remainAmount: Math.max(0, totalAmount - paidAmount + lateFeeAmount),
+        lateFeeAmount,
+      };
+    }
+
+    const stats = ref({});
+
+    // 已登入，取出該用戶所有借貸（以 phone 識別）
+    const LOGGED_IN_PHONE = '0905687733';
+    const currentUser = database.find(r => r.phone === LOGGED_IN_PHONE);
+    const userLoans = database
+      .filter(r => r.phone === LOGGED_IN_PHONE)
+      .map(r => {
+        const s = buildStats(r);
+        return { ...r, monthlyPayment: s.monthlyPayment, paidCount: s.paidCount, overdueCount: s.overdueCount };
+      });
+
+    function selectLoan(loan) {
+      const s = buildStats(loan);
+      record.value = { ...loan, monthlyPayment: s.monthlyPayment };
+      stats.value = s;
+    }
+
+    const ATM_SET  = new Set(['ATM','臨櫃','EATM','語音','匯款','網銀','全國繳費網']);
+    const CONV_SET = new Set(['7-11','全家','萊爾富','OK']);
+    function pmClass(m) {
+      if (!m) return 'pm-other';
+      if (ATM_SET.has(m))  return 'pm-atm';
+      if (CONV_SET.has(m)) return 'pm-conv';
+      if (m === '郵局')    return 'pm-post';
+      return 'pm-other';
+    }
+
+    function fmt(n) {
+      if (n == null || isNaN(n)) return '0';
+      return Number(n).toLocaleString('zh-TW');
+    }
+
+    return { record, stats, currentUser, userLoans, selectLoan, pmClass, fmt };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

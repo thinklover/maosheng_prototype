@@ -191,6 +191,18 @@ tr:hover td { background: #fffdf5; }
 .placeholder-page { padding: 60px 0; text-align: center; color: #aaa; font-size: 16px; }
 .placeholder-page .icon { font-size: 48px; margin-bottom: 12px; }
 
+/* ── 便簽紙 ── */
+.sticky-note {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: #fffde7; border-left: 4px solid #f9a825;
+  border-radius: 6px; padding: 12px 16px; margin-bottom: 16px;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.08);
+  font-size: 13px;
+}
+.sticky-note-icon { font-size: 20px; margin-top: 1px; flex-shrink: 0; }
+.sticky-note-title { font-weight: bold; color: #f57f17; margin-bottom: 4px; font-size: 13px; }
+.sticky-note-text { color: #5d4037; line-height: 1.6; }
+
 /* ── 統計儀表板 ── */
 .dash-cards {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 4px;
@@ -271,6 +283,18 @@ tr:hover td { background: #fffdf5; }
 .product-tag .tag-edit { background: none; border: none; color: #1565c0; cursor: pointer; font-size: 12px; padding: 0; }
 .product-add-row { display: flex; gap: 8px; margin-top: 12px; }
 .product-add-row input { flex: 1; padding: 7px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; }
+
+.product-mgmt-list { border: 1px solid #e8e0cc; border-radius: 6px; overflow: hidden; }
+.product-mgmt-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-bottom: 1px solid #f0ebe0; background: white; font-size: 13px;
+}
+.product-mgmt-row:last-child { border-bottom: none; }
+.product-mgmt-row:hover { background: #fffdf5; }
+.drag-handle { color: #ccc; cursor: grab; font-size: 16px; flex-shrink: 0; }
+.product-mgmt-name { flex: 1; color: #333; }
+.product-mgmt-input { flex: 1; padding: 3px 8px; border: 1px solid #c8a84b; border-radius: 4px; font-size: 13px; }
+.product-mgmt-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
 </style>
 </head>
@@ -389,6 +413,17 @@ tr:hover td { background: #fffdf5; }
             </tbody>
           </table>
         </div>
+        <!-- 便簽紙 -->
+        <div class="sticky-note" style="margin-top:16px">
+          <div class="sticky-note-icon">📌</div>
+          <div class="sticky-note-content">
+            <div class="sticky-note-title">開發待辦</div>
+            <div class="sticky-note-text">
+              1. 解決搜尋功能故障問題（目前僅能搜尋當前頁面資料，需改為全量搜尋）。<br>
+              2. 解決排序功能問題（目前僅能排序當前頁面資料，需改為全量排序）。
+            </div>
+          </div>
+        </div>
       </template>
 
       <!-- 黑名單管理 -->
@@ -400,7 +435,7 @@ tr:hover td { background: #fffdf5; }
           <input class="search-input" v-model="blIdSearch" placeholder="搜尋身分證字號" />
           <button class="btn-reset" @click="blSearch=''; blIdSearch=''">重置</button>
           <div class="spacer"></div>
-          <button class="btn-export" @click="exportBl">⬇ 匯出 CSV</button>
+          <button class="btn-export" @click="exportBl">⬇ 匯出報表</button>
           <button class="btn-primary" @click="openBlForm()">＋ 新增黑名單</button>
         </div>
         <div class="table-wrap">
@@ -452,10 +487,27 @@ tr:hover td { background: #fffdf5; }
       <template v-if="activePage==='利率管理'">
         <div class="mgmt-toolbar">
           <span class="search-label">方案名稱</span>
-          <input class="search-input" v-model="rateSearch" placeholder="搜尋方案名稱" />
-          <button class="btn-reset" @click="rateSearch=''">重置</button>
+          <select class="search-select" v-model="rateSearch">
+            <option value="">全部</option>
+            <option>A方案</option>
+            <option>B方案</option>
+            <option>S方案</option>
+          </select>
+          <span class="search-label">分期數</span>
+          <select class="search-select" v-model="rateTermsFilter">
+            <option value="">全部</option>
+            <option value="3">3 期</option>
+            <option value="6">6 期</option>
+            <option value="9">9 期</option>
+            <option value="12">12 期</option>
+            <option value="15">15 期</option>
+            <option value="18">18 期</option>
+            <option value="21">21 期</option>
+            <option value="24">24 期</option>
+          </select>
+          <button class="btn-reset" @click="rateSearch=''; rateTermsFilter=''">重置</button>
           <div class="spacer"></div>
-          <button class="btn-export" @click="exportRates">⬇ 匯出 CSV</button>
+          <button class="btn-export" @click="exportRates">⬇ 匯出報表</button>
           <button class="btn-primary" @click="openRateForm()">＋ 新增利率</button>
         </div>
         <div class="table-wrap">
@@ -463,7 +515,7 @@ tr:hover td { background: #fffdf5; }
             <thead>
               <tr>
                 <th>#</th><th>方案名稱</th><th>適用分期數</th><th>年利率 (%)</th>
-                <th>月費率 (%)</th><th>建立日期</th><th>狀態</th><th>操作</th>
+                <th>月費率 (%)</th><th>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -472,16 +524,14 @@ tr:hover td { background: #fffdf5; }
                 <td>{{ r.name }}</td>
                 <td>{{ r.terms }} 期</td>
                 <td><strong>{{ r.rate }}%</strong></td>
-                <td>{{ (r.rate / 12).toFixed(2) }}%</td>
-                <td>{{ formatDate(r.createdDate) }}</td>
-                <td><span class="status-pill" :class="r.enabled ? 'pill-ok' : 'pill-neutral'">{{ r.enabled ? '啟用' : '停用' }}</span></td>
+                <td>{{ (r.rate / 12).toFixed(3) }}%</td>
                 <td>
                   <button class="btn-sm btn-edit" @click="openRateForm(r)" style="margin-right:4px">編輯</button>
                   <button class="btn-sm btn-del" @click="deleteRate(r.id)">刪除</button>
                 </td>
               </tr>
               <tr v-if="filteredRates.length === 0">
-                <td colspan="8" style="color:#aaa; padding:20px">查無資料</td>
+                <td colspan="6" style="color:#aaa; padding:20px">查無資料</td>
               </tr>
             </tbody>
           </table>
@@ -491,15 +541,32 @@ tr:hover td { background: #fffdf5; }
           <div class="sm-modal">
             <div class="sm-modal-header">{{ rateForm.id ? '編輯利率方案' : '新增利率方案' }}</div>
             <div class="sm-modal-body">
-              <div class="form-row"><label>方案名稱 *</label><input v-model="rateForm.name" placeholder="例：S方案" /></div>
-              <div class="form-row"><label>適用分期數 *</label><input type="number" v-model.number="rateForm.terms" min="1" placeholder="例：12" /></div>
-              <div class="form-row"><label>年利率 (%) *</label><input type="number" v-model.number="rateForm.rate" step="0.1" min="0" placeholder="例：12" /></div>
               <div class="form-row">
-                <label>狀態</label>
-                <select v-model="rateForm.enabled">
-                  <option :value="true">啟用</option>
-                  <option :value="false">停用</option>
+                <label>方案名稱 *</label>
+                <select v-model="rateForm.name">
+                  <option value="" disabled>請選擇方案</option>
+                  <option>A方案</option>
+                  <option>B方案</option>
+                  <option>S方案</option>
                 </select>
+              </div>
+              <div class="form-row">
+                <label>適用分期數 *</label>
+                <select v-model.number="rateForm.terms">
+                  <option value="" disabled>請選擇分期數</option>
+                  <option :value="3">3 期</option>
+                  <option :value="6">6 期</option>
+                  <option :value="9">9 期</option>
+                  <option :value="12">12 期</option>
+                  <option :value="15">15 期</option>
+                  <option :value="18">18 期</option>
+                  <option :value="21">21 期</option>
+                  <option :value="24">24 期</option>
+                </select>
+              </div>
+              <div class="form-row"><label>年利率 (%) *</label><input type="number" v-model.number="rateForm.rate" step="0.001" min="0" placeholder="例：10.04" /></div>
+              <div v-if="rateDuplicateWarning" style="background:#ffebee; color:#c62828; border-radius:6px; padding:8px 12px; font-size:13px; margin-top:4px">
+                ⚠ 此方案與分期數組合已存在，請勿重複新增。
               </div>
             </div>
             <div class="sm-modal-footer">
@@ -530,6 +597,35 @@ tr:hover td { background: #fffdf5; }
             目前設定：逾期超過 <strong>{{ sysSettings.lateFeeThreshold }}</strong> 天未繳款，加收滯納金 <strong>NT$ {{ sysSettings.lateFeeAmount }}</strong> 元
           </div>
         </div>
+
+        <!-- 產品名稱（下拉選項）管理 -->
+        <div class="settings-card">
+          <h3>前端產品名稱（下拉選項）</h3>
+          <div>
+            <div style="flex:1; min-width:260px;">
+              <div style="font-size:12px; color:#888; margin-bottom:8px">可新增、編輯、刪除下拉選單中的選項，拖曳可調整順序。</div>
+              <div class="product-mgmt-list">
+                <div class="product-mgmt-row" v-for="(p, i) in sysSettings.products" :key="i">
+                  <span class="drag-handle">⠿</span>
+                  <span v-if="editingProductIdx !== i" class="product-mgmt-name">{{ p }}</span>
+                  <input v-else class="product-mgmt-input" v-model="editingProductName"
+                    @keyup.enter="saveProductEdit(i)" @keyup.escape="editingProductIdx=-1"
+                    @blur="saveProductEdit(i)" />
+                  <div class="product-mgmt-actions">
+                    <button class="btn-sm btn-edit" v-if="editingProductIdx !== i" @click="startEditProduct(i)">編輯</button>
+                    <button class="btn-sm btn-edit" v-else @click="saveProductEdit(i)" style="background:#e8f5e9; color:#2e7d32; border-color:#a5d6a7">確認</button>
+                    <button class="btn-sm btn-del" @click="deleteProduct(i)">刪除</button>
+                  </div>
+                </div>
+                <div v-if="sysSettings.products.length === 0" style="color:#aaa; font-size:13px; padding:8px 0">尚無選項</div>
+              </div>
+              <div class="product-add-row" style="margin-top:10px">
+                <input v-model="newProductName" placeholder="輸入新選項名稱…" @keyup.enter="addProduct" />
+                <button class="btn-primary" @click="addProduct">新增</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </template>
 
       <!-- 統計儀表板 -->
@@ -542,7 +638,7 @@ tr:hover td { background: #fffdf5; }
           <input class="search-date" type="text" v-model="dashDateTo" placeholder="yyyy/mm/dd" maxlength="10" />
           <button class="btn-reset" @click="dashDateFrom=''; dashDateTo=''">重置</button>
           <div class="spacer"></div>
-          <button class="btn-export" @click="exportDash">⬇ 下載明細</button>
+          <button class="btn-export" @click="exportDash">⬇ 匯出報表</button>
         </div>
 
         <!-- 報表卡片 -->
@@ -624,6 +720,14 @@ tr:hover td { background: #fffdf5; }
               </tr>
             </tbody>
           </table>
+        </div>
+        <!-- 便簽紙 -->
+        <div class="sticky-note" style="margin-top:16px">
+          <div class="sticky-note-icon">📌</div>
+          <div class="sticky-note-content">
+            <div class="sticky-note-title">開發待辦</div>
+            <div class="sticky-note-text">目前資料為系統內建範例資料。<br>正式上線前需將 FTP 上的實際數據匯入，以顯示真實的應收／實收統計。</div>
+          </div>
         </div>
       </template>
 
@@ -990,31 +1094,65 @@ createApp({
 
     // ── 利率管理 ──
     const rateSearch = ref('');
+    const rateTermsFilter = ref('');
     const rateFormOpen = ref(false);
     const rateForm = ref({});
     let rateNextId = 5;
 
     const rates = ref([
-      { id: 1, name: 'S方案',    terms: 12, rate: 12, enabled: true,  createdDate: '2025-01-01' },
-      { id: 2, name: 'A方案',    terms: 18, rate: 13, enabled: true,  createdDate: '2025-01-01' },
-      { id: 3, name: 'B方案',    terms: 12, rate: 16, enabled: true,  createdDate: '2025-01-01' },
-      { id: 4, name: 'A方案(長)', terms: 24, rate: 14, enabled: false, createdDate: '2025-06-01' },
+      { id:  1, name: 'A方案', terms:  3, rate:  4.01,  createdDate: '2025-01-01' },
+      { id:  2, name: 'A方案', terms:  6, rate:  5.51,  createdDate: '2025-01-01' },
+      { id:  3, name: 'A方案', terms:  9, rate:  8,     createdDate: '2025-01-01' },
+      { id:  4, name: 'A方案', terms: 12, rate: 10.04,  createdDate: '2025-01-01' },
+      { id:  5, name: 'A方案', terms: 15, rate: 12.05,  createdDate: '2025-01-01' },
+      { id:  6, name: 'A方案', terms: 18, rate: 14.03,  createdDate: '2025-01-01' },
+      { id:  7, name: 'A方案', terms: 21, rate: 15.08,  createdDate: '2025-01-01' },
+      { id:  8, name: 'A方案', terms: 24, rate: 16.04,  createdDate: '2025-01-01' },
+      { id:  9, name: 'B方案', terms:  3, rate:  6.395, createdDate: '2025-01-01' },
+      { id: 10, name: 'B方案', terms:  6, rate: 11.12,  createdDate: '2025-01-01' },
+      { id: 11, name: 'B方案', terms:  9, rate: 11.15,  createdDate: '2025-01-01' },
+      { id: 12, name: 'B方案', terms: 12, rate: 17,     createdDate: '2025-01-01' },
+      { id: 13, name: 'B方案', terms: 15, rate: 19.775, createdDate: '2025-01-01' },
+      { id: 14, name: 'B方案', terms: 18, rate: 22.58,  createdDate: '2025-01-01' },
+      { id: 15, name: 'B方案', terms: 21, rate: 29.045, createdDate: '2025-01-01' },
+      { id: 16, name: 'B方案', terms: 24, rate: 31.64,  createdDate: '2025-01-01' },
+      { id: 17, name: 'S方案', terms:  3, rate:  0,     createdDate: '2025-01-01' },
+      { id: 18, name: 'S方案', terms:  6, rate:  0,     createdDate: '2025-01-01' },
+      { id: 19, name: 'S方案', terms:  9, rate:  0,     createdDate: '2025-01-01' },
+      { id: 20, name: 'S方案', terms: 12, rate:  0,     createdDate: '2025-01-01' },
+      { id: 21, name: 'S方案', terms: 15, rate:  0,     createdDate: '2025-01-01' },
+      { id: 22, name: 'S方案', terms: 18, rate:  0,     createdDate: '2025-01-01' },
+      { id: 23, name: 'S方案', terms: 21, rate:  0,     createdDate: '2025-01-01' },
+      { id: 24, name: 'S方案', terms: 24, rate:  0,     createdDate: '2025-01-01' },
     ]);
 
     const filteredRates = computed(() =>
-      rates.value.filter(r => !rateSearch.value || r.name.includes(rateSearch.value))
+      rates.value.filter(r => {
+        if (rateSearch.value && r.name !== rateSearch.value) return false;
+        if (rateTermsFilter.value && r.terms !== Number(rateTermsFilter.value)) return false;
+        return true;
+      })
     );
+
+    const rateDuplicateWarning = computed(() => {
+      const f = rateForm.value;
+      if (!f.name || !f.terms) return false;
+      return rates.value.some(r => r.name === f.name && r.terms === f.terms && r.id !== f.id);
+    });
 
     function openRateForm(item = null) {
       rateForm.value = item
         ? { ...item }
-        : { id: null, name: '', terms: 12, rate: 12, enabled: true, createdDate: TODAY };
+        : { id: null, name: '', terms: '', rate: 0, createdDate: TODAY };
       rateFormOpen.value = true;
     }
 
     function saveRate() {
       if (!rateForm.value.name || !rateForm.value.terms || rateForm.value.rate == null) {
-        alert('請填寫方案名稱、分期數及年利率'); return;
+        alert('請選擇方案名稱、分期數並填寫年利率'); return;
+      }
+      if (rateDuplicateWarning.value) {
+        alert('此方案與分期數組合已存在，無法重複新增。'); return;
       }
       if (rateForm.value.id) {
         const idx = rates.value.findIndex(r => r.id === rateForm.value.id);
@@ -1042,9 +1180,9 @@ createApp({
     }
 
     function exportRates() {
-      const header = ['方案名稱', '分期數', '年利率(%)', '月費率(%)', '建立日期', '狀態'];
+      const header = ['方案名稱', '分期數', '年利率(%)', '月費率(%)'];
       const rows = filteredRates.value.map(r => [
-        r.name, r.terms, r.rate, (r.rate / 12).toFixed(2), r.createdDate, r.enabled ? '啟用' : '停用'
+        r.name, r.terms, r.rate, (r.rate / 12).toFixed(3)
       ]);
       const csv = [header, ...rows].map(r => r.join(',')).join('\n');
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1058,7 +1196,7 @@ createApp({
     const sysSettings = ref({
       lateFeeThreshold: 3,
       lateFeeAmount: 500,
-      products: ['S方案', 'A方案', 'B方案', '手機分期', '家電分期'],
+      products: ['S方案', 'A方案', 'B方案'],
     });
     const settingsSaved = ref(false);
     const newProductName = ref('');
@@ -1181,7 +1319,7 @@ createApp({
       // 黑名單
       blSearch, blIdSearch, blFormOpen, blForm, filteredBl, openBlForm, saveBl, deleteBl, exportBl,
       // 利率
-      rateSearch, rateFormOpen, rateForm, filteredRates, openRateForm, saveRate, deleteRate, exportRates,
+      rateSearch, rateTermsFilter, rateFormOpen, rateForm, rateDuplicateWarning, filteredRates, openRateForm, saveRate, deleteRate, exportRates,
       // 系統設定
       sysSettings, settingsSaved, newProductName, editingProductIdx, editingProductName,
       saveSettings, addProduct, deleteProduct, startEditProduct, saveProductEdit,
