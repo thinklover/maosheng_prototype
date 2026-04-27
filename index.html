@@ -352,7 +352,6 @@ tr:hover td { background: #fffdf5; }
     <div class="nav-item" :class="{active: activePage==='系統設定'}" @click="activePage='系統設定'">
       <span class="nav-icon">⚙️</span>系統設定
     </div>
-    <div class="sidebar-footer">v1.0.0 原型版</div>
   </aside>
 
   <!-- Main -->
@@ -919,6 +918,19 @@ tr:hover td { background: #fffdf5; }
   </div>
 
 </div><!-- /#app -->
+
+<!-- 前台快速連結 -->
+<a href="/client.html" target="_blank" title="前台手機端" style="
+  position: fixed; bottom: 18px; left: 18px; z-index: 999;
+  background: #2c2016; color: #c8a84b;
+  border: 1px solid #c8a84b; border-radius: 20px;
+  padding: 6px 12px; font-size: 12px; text-decoration: none;
+  display: flex; align-items: center; gap: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  opacity: 0.75; transition: opacity 0.15s;
+" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">
+  📱 前台
+</a>
 
 <script>
 const { createApp, ref, computed } = Vue;

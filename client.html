@@ -331,6 +331,19 @@ html, body { min-height: 100%; background: #fdf6e3; font-family: 'Noto Sans TC',
 
     <div class="page-footer">茂盛管理系統 © 2026</div>
 
+    <!-- 後台快速連結 -->
+    <a href="/" title="後台管理系統" style="
+      position: fixed; bottom: 18px; left: 18px; z-index: 999;
+      background: #2c2016; color: #c8a84b;
+      border: 1px solid #c8a84b; border-radius: 20px;
+      padding: 6px 12px; font-size: 12px; text-decoration: none;
+      display: flex; align-items: center; gap: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      opacity: 0.75; transition: opacity 0.15s;
+    " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">
+      🖥️ 後台
+    </a>
+
     <!-- 開發待辦 -->
     <div class="sticky-note">
       <div class="sticky-note-icon">📌</div>
