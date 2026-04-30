@@ -85,6 +85,48 @@ tr:hover td { background: #fffdf5; }
 .btn-audit { background: white; border: 1px solid #aaa; }
 .btn-resign { background: white; border: 1px solid #aaa; }
 
+/* 編輯模式 */
+.edit-input {
+  width: 100%; padding: 4px 8px; border: 1px solid #c8a84b;
+  border-radius: 4px; font-size: 13px; color: #333;
+  background: #fffdf5;
+}
+.edit-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(200,168,75,0.2); }
+.btn-save-basic {
+  padding: 4px 14px; background: #c8a84b; color: white; border: none;
+  border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.btn-save-basic:hover { background: #a8883b; }
+.btn-cancel-basic {
+  padding: 4px 12px; background: white; color: #666;
+  border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 12px;
+}
+.btn-cancel-basic:hover { background: #f5f5f5; }
+
+/* 檔案查閱按鈕 */
+.file-btn-group {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+.btn-file-doc {
+  padding: 6px 4px; border-radius: 5px; font-size: 12px; cursor: pointer;
+  border: none; font-weight: 500; text-align: center; transition: filter 0.15s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background: #3d5a80; color: white;
+}
+.btn-file-doc:hover { filter: brightness(1.15); }
+.btn-file-doc.unavailable {
+  background: #ddd8cc; color: #999; cursor: default;
+}
+.btn-file-doc.unavailable:hover { filter: none; }
+.btn-resend-email {
+  padding: 3px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
+  border: 1px solid #c8a84b; background: #c8a84b; color: white; margin-left: 6px;
+  font-weight: 500;
+}
+.btn-resend-email:hover { background: #a8883b; }
+
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
 .status-s { background: #b2dfdb; color: #00695c; }
 .status-a { background: #b2dfdb; color: #00695c; }
@@ -99,7 +141,7 @@ tr:hover td { background: #fffdf5; }
 }
 .modal {
   background: #f7f5ef; border-radius: 12px; padding: 0;
-  width: 100%; max-width: 960px; max-height: 90vh; overflow: hidden;
+  width: 100%; max-width: 1200px; max-height: 90vh; overflow: hidden;
   box-shadow: 0 12px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column;
 }
 .modal-header {
@@ -317,6 +359,64 @@ tr:hover td { background: #fffdf5; }
 .product-mgmt-input { flex: 1; padding: 3px 8px; border: 1px solid #c8a84b; border-radius: 4px; font-size: 13px; }
 .product-mgmt-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
+/* ── 特約商 hover 同色高亮 ── */
+tr.merchant-highlight td { background-color: #dbeafe !important; }
+
+/* ── 繳費單 ── */
+.slip-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+  display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px;
+}
+.slip-wrap {
+  background: white; width: 720px; max-width: 96%; max-height: 92vh; overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35); border: 1px solid #aaa;
+  font-size: 12px; font-family: sans-serif;
+}
+.slip-top-bar {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 10px 14px; border-bottom: 2px solid #000; line-height: 1.6;
+}
+.slip-info-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.slip-info-table td { border: 1px solid #999; padding: 5px 8px; }
+.slip-info-table .lbl { background: #f0f0f0; font-weight: bold; white-space: nowrap; }
+.slip-section-hd {
+  background: #e8e8e8; padding: 5px 12px; font-weight: bold; font-size: 11px;
+  border-top: 1px solid #aaa; border-bottom: 1px solid #aaa;
+  display: flex; justify-content: space-between;
+}
+.slip-barcode-area { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.slip-barcode-col { padding: 8px 10px; border-right: 1px solid #aaa; }
+.slip-barcode-col:last-child { border-right: none; }
+.slip-barcode-col .col-title { font-weight: bold; font-size: 11px; margin-bottom: 5px; }
+.barcode-bar {
+  height: 48px; width: 100%; margin: 3px 0;
+  background: repeating-linear-gradient(
+    90deg,
+    #000 0px, #000 2px, #fff 2px, #fff 4px,
+    #000 4px, #000 5px, #fff 5px, #fff 8px,
+    #000 8px, #000 10px, #fff 10px, #fff 12px,
+    #000 12px, #000 15px, #fff 15px, #fff 17px,
+    #000 17px, #000 19px, #fff 19px, #fff 22px,
+    #000 22px, #000 23px, #fff 23px, #fff 26px,
+    #000 26px, #000 29px, #fff 29px, #fff 31px
+  );
+}
+.barcode-num { text-align: center; font-size: 11px; letter-spacing: 1px; margin-bottom: 3px; }
+.slip-footer-row {
+  display: flex; justify-content: space-around; padding: 6px 14px;
+  border-top: 1px solid #aaa; font-size: 11px; color: #555;
+}
+.slip-actions {
+  padding: 12px 16px; display: flex; justify-content: flex-end; gap: 10px;
+  border-top: 2px solid #c8a84b; background: #fdf9f0;
+}
+.btn-slip {
+  padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1px solid #7b2d8b; background: #f3e5f5; color: #6a1b9a;
+  flex-shrink: 0;
+}
+.btn-slip:hover { background: #7b2d8b; color: white; }
+
 </style>
 </head>
 <body>
@@ -388,11 +488,6 @@ tr:hover td { background: #fffdf5; }
               <option>B方案</option>
             </select>
           </template>
-          <span class="search-label">繳費提示</span>
-          <select class="search-select" v-model="filterPayment">
-            <option value="">全部</option>
-            <option>未審核</option>
-          </select>
           <span class="search-label">申請人電話</span>
           <input class="search-input" v-model="filterPhone" placeholder="輸入電話號碼" />
           <span class="search-label">身分證</span>
@@ -426,7 +521,10 @@ tr:hover td { background: #fffdf5; }
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in filtered" :key="row.id">
+              <tr v-for="row in filtered" :key="row.id"
+                  :class="{ 'merchant-highlight': hoveredMerchant && normalizeMerchant(row.merchant) === hoveredMerchant }"
+                  @mouseenter="hoveredMerchant = normalizeMerchant(row.merchant)"
+                  @mouseleave="hoveredMerchant = ''">
                 <td><span class="link-name" @click="openDetail(row)">{{ row.id }}</span></td>
                 <td>{{ formatDate(row.date) }}</td>
                 <td>{{ row.merchant }}</td>
@@ -453,7 +551,21 @@ tr:hover td { background: #fffdf5; }
             <div class="sticky-note-title">開發待辦</div>
             <div class="sticky-note-text">
               1. 解決搜尋功能故障問題（目前僅能搜尋當前頁面資料，需改為全量搜尋）。<br>
-              2. 解決排序功能問題（目前僅能排序當前頁面資料，需改為全量排序）。
+              2. 解決排序功能問題（目前僅能排序當前頁面資料，需改為全量排序）。<br>
+              3. 滑鼠移動到行上，相同特約商（相同統編）的行，都用淡藍色顯示出來。
+            </div>
+          </div>
+        </div>
+        <!-- 合約修改待辦便簽 -->
+        <div class="sticky-note" style="margin-top:8px; background:#fff5f5; border-left-color:#e53935;">
+          <div class="sticky-note-icon">📄</div>
+          <div class="sticky-note-content">
+            <div class="sticky-note-title" style="color:#c62828;">合約修改待辦</div>
+            <div class="sticky-note-text">
+              1. <strong>第2條</strong>：加上年月日、應繳金額、現金價格交易之差金額。<br>
+              2. <strong>本票</strong>：加上年月日、新台幣金額。<br>
+              3. <strong>發票人</strong>：加上年月日，且需要補到上面一頁。<br>
+              4. 合約條款再加上：<span style="color:#e53935; font-weight:bold;">「分期付款期間未繳清以前禁止出售或典當，以免觸法」</span>（紅色字顯示）。
             </div>
           </div>
         </div>
@@ -789,16 +901,107 @@ tr:hover td { background: #fffdf5; }
       <div class="modal-body">
         <!-- 基本資料 -->
         <div class="detail-section">
-          <div class="section-title">基本資料</div>
+          <div class="section-title" style="justify-content:space-between;">
+            基本資料
+            <span style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;" v-if="editingBasic">
+              <button class="btn-save-basic" @click="saveBasicEdit">儲存</button>
+              <button class="btn-cancel-basic" @click="cancelBasicEdit">取消</button>
+            </span>
+            <button v-else class="btn-sm btn-edit" style="font-size:12px;margin-left:auto;flex-shrink:0;font-weight:normal;" @click="startEditBasic">編輯</button>
+          </div>
           <div class="detail-grid cols-3">
             <div class="detail-item"><span class="detail-label">受理編號</span><span class="detail-value">{{ selected.id }}</span></div>
             <div class="detail-item"><span class="detail-label">申請日期</span><span class="detail-value">{{ formatDate(selected.date) }}</span></div>
-            <div class="detail-item"><span class="detail-label">特約商</span><span class="detail-value">{{ selected.merchant }}</span></div>
-            <div class="detail-item"><span class="detail-label">申請人</span><span class="detail-value">{{ selected.applicant }}</span></div>
-            <div class="detail-item"><span class="detail-label">手機號碼</span><span class="detail-value">{{ selected.phone }}</span></div>
-            <div class="detail-item"><span class="detail-label">身分證字號</span><span class="detail-value">{{ selected.idNumber }}</span></div>
-            <div class="detail-item"><span class="detail-label">合約</span><span class="detail-value"><button class="btn btn-view" style="padding:2px 8px">查看合約</button></span></div>
-            <div class="detail-item"><span class="detail-label">審核狀態</span><span class="detail-value"><span class="status-badge" :class="selected.statusClass">{{ selected.status }}</span></span></div>
+            <div class="detail-item">
+              <span class="detail-label">特約商</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.merchant }}</span>
+              <select v-else class="edit-input" v-model="basicEdit.merchant" style="cursor:pointer;">
+                <option v-for="m in merchants" :key="m" :value="m">{{ m }}</option>
+              </select>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">申請人</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.applicant }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.applicant" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">手機號碼</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.phone }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.phone" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">身分證字號</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.idNumber }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.idNumber" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">出生日期</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.birthday || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.birthday" placeholder="yyyy-mm-dd" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">借款項目</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.loanItem || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.loanItem" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">聯絡時間</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.contactTime || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.contactTime" placeholder="HH:MM-HH:MM" />
+            </div>
+            <div class="detail-item" style="grid-column:span 2">
+              <span class="detail-label">戶籍地址</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.registeredAddress || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.registeredAddress" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">通訊地址</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.mailingAddress || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.mailingAddress" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">親屬姓名1</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.relative1Name || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.relative1Name" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">親屬關係1</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.relative1Relation || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.relative1Relation" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">親屬電話1</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.relative1Phone || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.relative1Phone" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">朋友姓名</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.friendName || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.friendName" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">朋友電話</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.friendPhone || '—' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.friendPhone" />
+            </div>
+            <div class="detail-item" style="align-items:center;">
+              <span class="detail-label">電子郵件</span>
+              <span class="detail-value" v-if="!editingBasic" style="display:flex;align-items:center;gap:8px;">
+                <span>{{ selected.email || '—' }}</span>
+                <button v-if="selected.email" class="btn-resend-email" style="margin:0;flex-shrink:0;">重寄郵件</button>
+              </span>
+              <input v-else class="edit-input" v-model="basicEdit.email" />
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">審核狀態</span>
+              <span class="detail-value" v-if="!editingBasic"><span class="status-badge" :class="selected.statusClass">{{ selected.status }}</span></span>
+              <select v-else class="edit-input" v-model="basicEdit.status" style="cursor:pointer;">
+                <option>S方案</option>
+                <option>A方案</option>
+                <option>B方案</option>
+                <option>不批准</option>
+              </select>
+            </div>
             <div class="detail-item">
               <span class="detail-label">發送狀態</span>
               <span class="detail-value"><span class="status-pill" :class="selected.sent ? 'pill-ok' : 'pill-warn'">{{ selected.sent ? '已完成' : '待送出' }}</span></span>
@@ -807,13 +1010,27 @@ tr:hover td { background: #fffdf5; }
               <span class="detail-label">退件狀態</span>
               <span class="detail-value"><span class="status-pill" :class="selected.rejected ? 'pill-danger' : 'pill-neutral'">{{ selected.rejected ? '已退件' : '未退件' }}</span></span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">錄音檔</span>
-              <span class="detail-value"><span class="status-pill" :class="selected.audioUploaded ? 'pill-ok' : 'pill-neutral'">{{ selected.audioUploaded ? '已上傳' : '未上傳' }}</span></span>
-            </div>
             <div class="detail-item" style="grid-column:span 3">
               <span class="detail-label">備註內容</span>
-              <span class="detail-value">{{ selected.note || '（無）' }}</span>
+              <span class="detail-value" v-if="!editingBasic">{{ selected.note || '（無）' }}</span>
+              <input v-else class="edit-input" v-model="basicEdit.note" />
+            </div>
+          </div>
+
+          <!-- 檔案查閱 -->
+          <div style="margin-top:16px; padding-top:14px; border-top:1px solid #ede8d8;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px; font-weight:600; letter-spacing:0.5px;">檔案查閱</div>
+            <div class="file-btn-group">
+              <button class="btn-file-doc" :class="{ unavailable: !selected.docs.id_front }">身分證正面</button>
+              <button class="btn-file-doc" :class="{ unavailable: !selected.docs.id_back }">身分證反面</button>
+              <button class="btn-file-doc" :class="{ unavailable: !selected.docs.health_card }">健保卡</button>
+              <button class="btn-file-doc" :class="{ unavailable: !selected.docs.selfie }">手持身分證自拍</button>
+              <button class="btn-file-doc" :class="{ unavailable: !selected.docs.selfie_back }">手持身分證自拍反面</button>
+              <button class="btn-file-doc">保證人證件</button>
+              <button class="btn-file-doc">財力證明</button>
+              <button class="btn-file-doc" :class="{ unavailable: !selected.docs.other }">行照</button>
+              <button class="btn-file-doc">合約</button>
+              <button class="btn-file-doc" :class="{ unavailable: !selected.audioUploaded }">錄音檔</button>
             </div>
           </div>
         </div>
@@ -894,7 +1111,10 @@ tr:hover td { background: #fffdf5; }
 
         <!-- 分期明細 -->
         <div class="detail-section">
-          <div class="section-title">分期明細（年利率 {{ selected.rate }}% ／ 共 {{ selected.terms }} 期）</div>
+          <div class="section-title" style="justify-content:space-between;">
+            分期明細（年利率 {{ selected.rate }}% ／ 共 {{ selected.terms }} 期）
+            <button class="btn-slip" style="margin-left:8px;" @click="showPaymentSlip=true">📄 繳費單</button>
+          </div>
           <div class="installment-grid">
             <div v-for="inst in finance.installmentsWithStatus" :key="inst.no"
                  class="installment-card" :class="inst.statusClass">
@@ -913,6 +1133,133 @@ tr:hover td { background: #fffdf5; }
       <div class="modal-footer">
         <button class="btn-ghost" @click="selected = null">關閉</button>
         <button class="modal-close" @click="selected = null">確認</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 繳費單 Modal -->
+  <div class="slip-overlay" v-if="showPaymentSlip && selected" @click.self="showPaymentSlip=false">
+    <div class="slip-wrap">
+      <template v-if="slipInst">
+        <!-- 上半：第一聯 -->
+        <div class="slip-top-bar">
+          <div>
+            <div style="font-size:15px; font-weight:bold;">{{ selected.merchant }}</div>
+            <div style="font-weight:bold; font-size:13px; margin:3px 0;">{{ slipYear }} 年 {{ slipMonth }} 月繳費條碼</div>
+            <div style="font-size:11px; color:#444;">ATM 轉帳繳費 (https://eatm.tcb-bank.com.tw)，快速又方便。</div>
+            <div style="font-size:11px; color:#444;">ATM 自動櫃員機，輸入合庫銀行代碼 (006) 及轉入帳號 ({{ selected.virtualAccount }})。</div>
+          </div>
+          <div style="text-align:right; font-size:11px; color:#555;">
+            <div>客戶編號：{{ selected.id }}</div>
+            <div style="margin-top:4px;">{{ selected.registeredAddress || '' }}</div>
+          </div>
+        </div>
+
+        <!-- 基本資訊表 -->
+        <table class="slip-info-table">
+          <tr>
+            <td class="lbl">繳款代號</td>
+            <td style="font-weight:bold;">{{ selected.id }}</td>
+            <td class="lbl">應繳金額（元）</td>
+            <td style="font-weight:bold; color:#c62828; font-size:14px;">{{ slipInst.amount }}</td>
+            <td class="lbl">繳費期限</td>
+            <td style="font-weight:bold;">{{ formatDate(slipInst.dueDate) }}</td>
+          </tr>
+          <tr>
+            <td class="lbl">用戶名稱</td>
+            <td>{{ selected.applicant }}</td>
+            <td>{{ selected.merchant }}</td>
+            <td colspan="2" class="lbl">客戶編號：{{ selected.id }}</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="lbl">繳費項目</td>
+            <td colspan="3">{{ selected.loanItem || '分期款項' }}</td>
+            <td class="lbl">繳費金額</td>
+            <td style="font-weight:bold; color:#c62828;">{{ slipInst.amount }}</td>
+          </tr>
+        </table>
+
+        <div style="padding:6px 12px; font-size:11px; border-bottom:1px solid #ccc; color:#333;">
+          請於繳費期限前至超商（7-11、全家、OK、萊爾富）、合庫臨櫃、或 ATM 轉帳，完成繳費。
+        </div>
+        <div style="padding:6px 12px; font-size:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333;">
+          <span>應繳金額：<strong>{{ toChineseAmount(slipInst.amount) }}</strong></span>
+          <span style="font-size:15px; font-weight:bold; color:#c62828;">${{ slipInst.amount }}</span>
+        </div>
+
+        <!-- 下半：第二聯條碼區 -->
+        <div class="slip-section-hd">
+          <span>{{ slipYear }} 年 {{ slipMonth }} 月繳費條碼 ／ 繳款單號：{{ selected.id }}</span>
+          <span>客戶編號：{{ selected.id }} ／ 用戶名稱：{{ selected.applicant }}</span>
+        </div>
+
+        <div class="slip-barcode-area">
+          <!-- 合庫 ATM -->
+          <div class="slip-barcode-col">
+            <div class="col-title" style="color:#1565c0;">合庫繳費條碼</div>
+            <div style="font-size:10px; color:#555; margin-bottom:4px;">
+              交易：一四一、一四三
+            </div>
+            <div class="barcode-bar"></div>
+            <div class="barcode-num">{{ slipCodes.atm1 }}</div>
+            <div class="barcode-bar" style="background-position: -5px 0;"></div>
+            <div class="barcode-num">{{ slipCodes.atm2 }}</div>
+            <div class="barcode-bar" style="background-position: -10px 0;"></div>
+            <div class="barcode-num">{{ slipInst.amount }}</div>
+            <div style="font-size:10px; margin-top:8px; color:#555;">
+              主辦分行：五甲分行<br>TEL：(07) 7172250
+            </div>
+          </div>
+
+          <!-- 超商 -->
+          <div class="slip-barcode-col">
+            <div class="col-title" style="color:#e65100;">超商繳費條碼</div>
+            <div class="barcode-bar" style="background-position: -3px 0;"></div>
+            <div class="barcode-num">{{ slipCodes.conv1 }}</div>
+            <div class="barcode-bar" style="background-position: -7px 0;"></div>
+            <div class="barcode-num">{{ slipCodes.conv2 }}</div>
+            <div class="barcode-bar" style="background-position: -14px 0;"></div>
+            <div class="barcode-num">{{ slipCodes.conv3 }}</div>
+            <div style="font-size:10px; margin-top:8px; color:#555;">
+              應繳金額：{{ slipInst.amount + 15 }}<br>（超商繳費款人需另付 15 元手續費）
+            </div>
+          </div>
+
+          <!-- 郵局 -->
+          <div class="slip-barcode-col">
+            <div class="col-title" style="color:#6a1b9a;">郵局繳費條碼</div>
+            <div class="barcode-bar" style="background-position: -2px 0;"></div>
+            <div class="barcode-num">{{ slipCodes.post1 }}</div>
+            <div class="barcode-bar" style="background-position: -9px 0;"></div>
+            <div class="barcode-num">{{ slipCodes.post2 }}</div>
+            <div class="barcode-bar" style="background-position: -16px 0;"></div>
+            <div class="barcode-num">{{ slipCodes.post3 }}</div>
+            <div style="font-size:10px; margin-top:8px; color:#555;">
+              應繳金額：{{ slipInst.amount + 20 }}<br>（合代收合庫手續費 20 元）
+            </div>
+          </div>
+        </div>
+
+        <!-- 核章列 -->
+        <div class="slip-footer-row">
+          <span>核章</span><span>會計</span><span>出納</span><span>記帳</span><span>櫃員</span>
+        </div>
+      </template>
+
+      <!-- 已全數繳清 -->
+      <template v-else>
+        <div style="padding:40px; text-align:center; color:#555;">
+          <div style="font-size:36px; margin-bottom:14px;">✅</div>
+          <div style="font-size:16px; font-weight:bold; color:#2e7d32;">所有期數已繳清</div>
+          <div style="margin-top:8px; font-size:13px; color:#888;">無待繳費分期，無需產生繳費單。</div>
+        </div>
+      </template>
+
+      <!-- 操作按鈕 -->
+      <div class="slip-actions">
+        <button class="btn-ghost" @click="showPaymentSlip=false">關閉</button>
+        <button class="modal-close" onclick="window.print()">🖨 列印</button>
       </div>
     </div>
   </div>
@@ -940,7 +1287,6 @@ createApp({
     const reviewTab = ref('審核中');
     const search = ref('');
     const filterStatus = ref('');
-    const filterPayment = ref('');
     const filterPhone = ref('');
     const filterIdNumber = ref('');
     const dateFrom = ref('');
@@ -992,20 +1338,72 @@ createApp({
         installments, remittances,
         virtualAccount: base.virtualAccount || ('8124-' + (Math.floor(Math.random() * 9e9) + 1e9)),
         virtualBank: base.virtualBank || '玉山銀行 (808)',
+        birthday: base.birthday || '',
+        registeredAddress: base.registeredAddress || '',
+        mailingAddress: base.mailingAddress || '',
+        relative1Name: base.relative1Name || '',
+        relative1Relation: base.relative1Relation || '',
+        relative1Phone: base.relative1Phone || '',
+        friendName: base.friendName || '',
+        friendPhone: base.friendPhone || '',
+        loanItem: base.loanItem || '',
+        email: base.email || '',
+        contactTime: base.contactTime || '',
+        docs: base.docs || {},
       };
     }
 
     const rawRows = [
-      { id: '202604200001', date: '2026-04-20', merchant: '台中群佳車業-S',  applicant: '羅兆宸', phone: '0986281992', idNumber: 'A123456789', status: 'S方案',  statusClass: 'status-s',      sent: false, rejected: false, audioUploaded: false, payment: '未審核', note: '',       principal: 30000, rate: 12, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
-      { id: '202604200002', date: '2026-04-20', merchant: '台中群佳車業001',  applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '資料不齊', principal: 50000, rate: 15, terms: 18, paidCount: 0, blacklisted: true,  blacklistReason: '過去有逾期紀錄超過 90 天' },
-      { id: '202604170001', date: '2026-04-17', merchant: '台中森宇-A',       applicant: '林聖棻', phone: '0970817737', idNumber: 'C345678901', status: 'A方案',  statusClass: 'status-a',      sent: true,  rejected: false, audioUploaded: true,  payment: '0/18',  note: '',       principal: 60000, rate: 13, terms: 18, paidCount: 0, blacklisted: false, blacklistReason: '' },
-      { id: '202604160001', date: '2026-04-16', merchant: '台中森宇-A',       applicant: '林聖棻', phone: '0970817737', idNumber: 'C345678901', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '重複申請', principal: 40000, rate: 13, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
-      { id: '202603270001', date: '2026-03-27', merchant: '鷹村工廠(A)',       applicant: '孫翊庭', phone: '0955520690', idNumber: 'D456789012', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '',       principal: 25000, rate: 14, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
-      { id: '202603260001', date: '2026-03-26', merchant: '鷹村工廠(S)',       applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'S方案',  statusClass: 'status-s',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 35000, rate: 12, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '' },
-      { id: '202603250001', date: '2026-03-25', merchant: '手機分期',          applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'B方案',  statusClass: 'status-b',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 18000, rate: 16, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
-      { id: '202603250002', date: '2026-03-25', merchant: '鷹村工廠(B)',       applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'B方案',  statusClass: 'status-b',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 22000, rate: 16, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '' },
-      { id: '202603230001', date: '2026-03-23', merchant: '鷹村工廠(A)',       applicant: '覃德威', phone: '0966587350', idNumber: 'E567890123', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '',       principal: 30000, rate: 14, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '' },
+      { id: '202604200001', date: '2026-04-20', merchant: '台中群佳車業-S',  applicant: '羅兆宸', phone: '0986281992', idNumber: 'A123456789', status: 'S方案',  statusClass: 'status-s',      sent: false, rejected: false, audioUploaded: false, payment: '未審核', note: '',       principal: 30000, rate: 12, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '',
+        birthday: '1992-08-15', registeredAddress: '台中市西屯區大墩路123號', mailingAddress: '台中市西屯區大墩路123號',
+        relative1Name: '羅志豪', relative1Relation: '父親', relative1Phone: '0912345678', friendName: '張偉誠', friendPhone: '0921345678',
+        loanItem: '機車精品改裝', email: 'lzc0815@gmail.com', contactTime: '10:00-12:00',
+        docs: { id_front: true, id_back: true, health_card: true, selfie: true, selfie_back: true, guarantor: false, financial: false, other: true } },
+      { id: '202604200002', date: '2026-04-20', merchant: '台中群佳車業001',  applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '資料不齊', principal: 50000, rate: 15, terms: 18, paidCount: 0, blacklisted: true,  blacklistReason: '過去有逾期紀錄超過 90 天',
+        birthday: '1988-03-22', registeredAddress: '台中市北屯區軍功路一段220號', mailingAddress: '台中市北屯區軍功路一段220號',
+        relative1Name: '吳建國', relative1Relation: '父親', relative1Phone: '0972456789', friendName: '林俊賢', friendPhone: '0963789012',
+        loanItem: '汽車改裝', email: 'wyd1988@gmail.com', contactTime: '14:00-16:00',
+        docs: { id_front: true, id_back: false, health_card: true, selfie: false, selfie_back: false, guarantor: false, financial: false, other: false } },
+      { id: '202604170001', date: '2026-04-17', merchant: '台中森宇-A',       applicant: '林聖棻', phone: '0970817737', idNumber: 'C345678901', status: 'A方案',  statusClass: 'status-a',      sent: true,  rejected: false, audioUploaded: true,  payment: '0/18',  note: '',       principal: 60000, rate: 13, terms: 18, paidCount: 0, blacklisted: false, blacklistReason: '',
+        birthday: '1995-11-05', registeredAddress: '台中市南屯區大進街88號', mailingAddress: '台中市南屯區大進街88號',
+        relative1Name: '林志明', relative1Relation: '父親', relative1Phone: '0934567890', friendName: '陳彥廷', friendPhone: '0945678901',
+        loanItem: '精品改裝', email: 'lsf1995@gmail.com', contactTime: '09:00-11:00',
+        docs: { id_front: true, id_back: true, health_card: true, selfie: true, selfie_back: true, guarantor: false, financial: true, other: false } },
+      { id: '202604160001', date: '2026-04-16', merchant: '台中森宇-A',       applicant: '林聖棻', phone: '0970817737', idNumber: 'C345678901', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '重複申請', principal: 40000, rate: 13, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '',
+        birthday: '1995-11-05', registeredAddress: '台中市南屯區大進街88號', mailingAddress: '台中市南屯區大進街88號',
+        relative1Name: '林志明', relative1Relation: '父親', relative1Phone: '0934567890', friendName: '陳彥廷', friendPhone: '0945678901',
+        loanItem: '精品改裝', email: 'lsf1995@gmail.com', contactTime: '09:00-11:00',
+        docs: { id_front: true, id_back: true, health_card: false, selfie: true, selfie_back: false, guarantor: false, financial: false, other: false } },
+      { id: '202603270001', date: '2026-03-27', merchant: '鷹村工廠(A)',       applicant: '孫翊庭', phone: '0955520690', idNumber: 'D456789012', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '',       principal: 25000, rate: 14, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '',
+        birthday: '1991-07-18', registeredAddress: '台中市豐原區圓環北路122號', mailingAddress: '台中市豐原區圓環北路122號',
+        relative1Name: '孫德明', relative1Relation: '父親', relative1Phone: '0923456789', friendName: '黃文傑', friendPhone: '0956789012',
+        loanItem: '機車改裝', email: 'syt1991@gmail.com', contactTime: '11:00-13:00',
+        docs: { id_front: true, id_back: true, health_card: true, selfie: false, selfie_back: false, guarantor: false, financial: false, other: false } },
+      { id: '202603260001', date: '2026-03-26', merchant: '鷹村工廠(S)',       applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'S方案',  statusClass: 'status-s',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 35000, rate: 12, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '',
+        birthday: '1988-03-22', registeredAddress: '台中市北屯區軍功路一段220號', mailingAddress: '台中市北屯區軍功路一段220號',
+        relative1Name: '吳建國', relative1Relation: '父親', relative1Phone: '0972456789', friendName: '林俊賢', friendPhone: '0963789012',
+        loanItem: '汽車精品配件', email: 'wyd1988@gmail.com', contactTime: '14:00-16:00',
+        docs: { id_front: true, id_back: true, health_card: true, selfie: true, selfie_back: true, guarantor: false, financial: false, other: true } },
+      { id: '202603250001', date: '2026-03-25', merchant: '手機分期',          applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'B方案',  statusClass: 'status-b',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 18000, rate: 16, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '',
+        birthday: '1988-03-22', registeredAddress: '台中市北屯區軍功路一段220號', mailingAddress: '台中市北屯區軍功路一段220號',
+        relative1Name: '吳建國', relative1Relation: '父親', relative1Phone: '0972456789', friendName: '林俊賢', friendPhone: '0963789012',
+        loanItem: '手機分期', email: 'wyd1988@gmail.com', contactTime: '14:00-16:00',
+        docs: { id_front: true, id_back: true, health_card: true, selfie: true, selfie_back: false, guarantor: false, financial: false, other: false } },
+      { id: '202603250002', date: '2026-03-25', merchant: '鷹村工廠(B)',       applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'B方案',  statusClass: 'status-b',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 22000, rate: 16, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '',
+        birthday: '1988-03-22', registeredAddress: '台中市北屯區軍功路一段220號', mailingAddress: '台中市北屯區軍功路一段220號',
+        relative1Name: '吳建國', relative1Relation: '父親', relative1Phone: '0972456789', friendName: '林俊賢', friendPhone: '0963789012',
+        loanItem: '車輛改裝', email: 'wyd1988@gmail.com', contactTime: '14:00-16:00',
+        docs: { id_front: true, id_back: true, health_card: true, selfie: true, selfie_back: true, guarantor: false, financial: false, other: false } },
+      { id: '202603230001', date: '2026-03-23', merchant: '鷹村工廠(A)',       applicant: '覃德威', phone: '0966587350', idNumber: 'E567890123', status: '不批准', statusClass: 'status-reject', sent: true,  rejected: true,  audioUploaded: false, payment: '未審核', note: '',       principal: 30000, rate: 14, terms: 12, paidCount: 0, blacklisted: false, blacklistReason: '',
+        birthday: '1986-12-30', registeredAddress: '台中市大里區中興路一段290號', mailingAddress: '台中市大里區中興路一段290號',
+        relative1Name: '覃志遠', relative1Relation: '父親', relative1Phone: '0912678901', friendName: '劉志豪', friendPhone: '0977890123',
+        loanItem: '汽車改裝', email: 'tdw1986@gmail.com', contactTime: '13:00-15:00',
+        docs: { id_front: true, id_back: false, health_card: true, selfie: true, selfie_back: false, guarantor: false, financial: false, other: false } },
       { id: '202603190001', date: '2026-03-19', merchant: '鷹村工廠(S)',       applicant: '張軒維', phone: '0905687733', idNumber: 'F678901234', status: 'S方案',  statusClass: 'status-s',      sent: true,  rejected: false, audioUploaded: true,  payment: '0/12',  note: '',       principal: 45000, rate: 12, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '',
+        birthday: '1993-04-25', registeredAddress: '台中市烏日區中山路一段156號', mailingAddress: '台中市烏日區中山路一段156號',
+        relative1Name: '張明德', relative1Relation: '父親', relative1Phone: '0968901234', friendName: '王建志', friendPhone: '0989012345',
+        loanItem: '精品改裝', email: 'zxw1993@gmail.com', contactTime: '10:00-12:00',
+        docs: { id_front: true, id_back: true, health_card: true, selfie: true, selfie_back: true, guarantor: false, financial: false, other: true },
         extraRemittances: [
           { date: '2026-05-01 09:05:11', amount: 4250, period: 2,  payMethod: '臨櫃',      note: '' },
           { date: '2026-05-08 10:22:47', amount: 4250, period: 3,  payMethod: 'ATM',       note: '' },
@@ -1036,7 +1434,6 @@ createApp({
         // 搜尋條件
         if (search.value && !r.id.includes(search.value) && !r.applicant.includes(search.value)) return false;
         if (filterStatus.value && r.status !== filterStatus.value) return false;
-        if (filterPayment.value && r.payment !== filterPayment.value) return false;
         if (filterPhone.value && !r.phone.includes(filterPhone.value.trim())) return false;
         if (filterIdNumber.value && !r.idNumber.toUpperCase().includes(filterIdNumber.value.trim().toUpperCase())) return false;
         if (dateFrom.value && r.date < toIso(dateFrom.value)) return false;
@@ -1046,12 +1443,45 @@ createApp({
     );
 
     function resetFilters() {
-      search.value = ''; filterStatus.value = ''; filterPayment.value = '';
+      search.value = ''; filterStatus.value = '';
       filterPhone.value = ''; filterIdNumber.value = '';
       dateFrom.value = ''; dateTo.value = '';
     }
 
-    function openDetail(row) { selected.value = row; }
+    function openDetail(row) { selected.value = row; editingBasic.value = false; showPaymentSlip.value = false; }
+
+    // ── 基本資料編輯 ──
+    const editingBasic = ref(false);
+    const basicEdit = ref({});
+
+    const STATUS_CLASS_MAP = {
+      'S方案': 'status-s', 'A方案': 'status-a', 'B方案': 'status-b', '不批准': 'status-reject',
+    };
+
+    function startEditBasic() {
+      const s = selected.value;
+      basicEdit.value = {
+        applicant: s.applicant, phone: s.phone, idNumber: s.idNumber,
+        birthday: s.birthday, loanItem: s.loanItem, contactTime: s.contactTime,
+        registeredAddress: s.registeredAddress, mailingAddress: s.mailingAddress,
+        relative1Name: s.relative1Name, relative1Relation: s.relative1Relation,
+        relative1Phone: s.relative1Phone, friendName: s.friendName,
+        friendPhone: s.friendPhone, email: s.email, note: s.note,
+        status: s.status, merchant: s.merchant,
+      };
+      editingBasic.value = true;
+    }
+
+    function saveBasicEdit() {
+      const edit = basicEdit.value;
+      Object.assign(selected.value, edit);
+      selected.value.statusClass = STATUS_CLASS_MAP[edit.status] || 'status-s';
+      editingBasic.value = false;
+    }
+
+    function cancelBasicEdit() {
+      editingBasic.value = false;
+    }
 
     const ATM_METHODS = new Set(['ATM', '臨櫃', 'EATM', '語音', '匯款', '網銀', '全國繳費網']);
     const CONV_METHODS = new Set(['7-11', '全家', '萊爾富', 'OK']);
@@ -1061,6 +1491,71 @@ createApp({
       if (CONV_METHODS.has(m)) return 'pm-conv';
       if (m === '郵局') return 'pm-post';
       return 'pm-other';
+    }
+
+    const hoveredMerchant = ref('');
+
+    // ── 繳費單 ──
+    const showPaymentSlip = ref(false);
+
+    const slipInst = computed(() => {
+      const f = finance.value;
+      if (!f || !f.installmentsWithStatus) return null;
+      return f.installmentsWithStatus.find(i => !i.paid) || null;
+    });
+
+    const slipYear = computed(() => slipInst.value ? String(slipInst.value.dueDate).slice(0, 4) : '');
+    const slipMonth = computed(() => {
+      if (!slipInst.value) return '';
+      return String(slipInst.value.dueDate).slice(5, 7).replace(/^0/, '');
+    });
+
+    const slipCodes = computed(() => {
+      const s = selected.value;
+      const inst = slipInst.value;
+      if (!s || !inst) return {};
+      const acct = (s.virtualAccount || '').replace(/[-\s]/g, '');
+      const shortId = s.id.slice(-8);
+      const period = String(inst.no).padStart(2, '0');
+      const amt = inst.amount;
+      const amtStr = String(amt);
+      return {
+        atm1: (acct.slice(0, 6) || '000000'),
+        atm2: (acct.slice(6) || '0000000').padStart(7, '0'),
+        conv1: `15${shortId.slice(0, 5)}IF`,
+        conv2: `R${shortId}00000${period}${amtStr.slice(-3).padStart(3, '0')}`,
+        conv3: `15${s.id.slice(2, 6)}0000${String(amt + 15).padStart(7, '0')}`,
+        post1: shortId,
+        post2: `1150${s.id.slice(2, 6)}R${shortId}F${String(amt + 20).padStart(11, '0')}`,
+        post3: String(amt + 20).padStart(8, '0'),
+      };
+    });
+
+    function toChineseAmount(n) {
+      if (!n || n === 0) return '零元整';
+      const digits = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];
+      const units = ['', '拾', '佰', '仟', '萬'];
+      const s = String(Math.round(n));
+      let result = '';
+      let prevZero = false;
+      for (let i = 0; i < s.length; i++) {
+        const d = parseInt(s[i]);
+        const u = units[s.length - 1 - i];
+        if (d === 0) {
+          if (!prevZero && i < s.length - 1) result += '零';
+          prevZero = true;
+        } else {
+          result += digits[d] + u;
+          prevZero = false;
+        }
+      }
+      return result.replace(/零+$/, '') + '元整';
+    }
+
+    function normalizeMerchant(merchant) {
+      if (!merchant) return '';
+      // 去除結尾的方案標記，例如 (S)、(A)、(B) 或 -S、-A、-B
+      return merchant.replace(/(\([ABS]\)|-[ABS])$/, '').trim();
     }
 
     function formatDate(d) {
@@ -1099,6 +1594,12 @@ createApp({
       const totalInterest = s.monthlyPayment * s.terms - s.principal;
       return { installmentsWithStatus, paidCount, overdueCount, lateFee, totalReceivable, totalReceived, totalInterest };
     });
+
+    // ── 特約商清單 ──
+    const merchants = ref([
+      '台中群佳車業-S', '台中群佳車業001', '台中森宇-A',
+      '鷹村工廠(A)', '鷹村工廠(S)', '鷹村工廠(B)', '手機分期',
+    ]);
 
     // ── 黑名單管理 ──
     const blSearch = ref('');
@@ -1368,9 +1869,12 @@ createApp({
 
     return {
       activePage, reviewTab, reviewTabCount, rejectTabCount,
-      search, filterStatus, filterPayment, filterPhone, filterIdNumber,
+      search, filterStatus, filterPhone, filterIdNumber,
       dateFrom, dateTo, filtered, selected, openDetail, resetFilters,
-      finance, formatMoney, formatDate, payMethodClass,
+      finance, formatMoney, formatDate, payMethodClass, hoveredMerchant, normalizeMerchant,
+      showPaymentSlip, slipInst, slipYear, slipMonth, slipCodes, toChineseAmount,
+      editingBasic, basicEdit, startEditBasic, saveBasicEdit, cancelBasicEdit,
+      merchants,
       // 黑名單
       blSearch, blIdSearch, blFormOpen, blForm, filteredBl, openBlForm, saveBl, deleteBl, exportBl,
       // 利率
