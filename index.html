@@ -132,6 +132,9 @@ tr:hover td { background: #fffdf5; }
 .status-a { background: #b2dfdb; color: #00695c; }
 .status-b { background: #b2dfdb; color: #00695c; }
 .status-reject { background: #ef9a9a; color: #b71c1c; }
+.status-pending { background: #fff3e0; color: #e65100; }
+.status-done { background: #e8f5e9; color: #2e7d32; }
+.status-dup { background: #fce4ec; color: #c62828; }
 .link-name { color: #1565c0; cursor: pointer; text-decoration: underline; }
 
 /* ── Modal ── */
@@ -196,6 +199,7 @@ tr:hover td { background: #fffdf5; }
 .installment-card .period { font-weight: bold; color: #333; font-size: 13px; }
 .installment-card .due { color: #888; font-size: 11px; margin: 2px 0; }
 .installment-card .amount { font-weight: bold; color: #b8860b; }
+.installment-card.overdue .amount { color: #c62828; }
 .installment-card .chip { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; margin-left: 4px; }
 .installment-card.paid .chip { background: #2e7d32; color: white; }
 .installment-card.overdue .chip { background: #c62828; color: white; }
@@ -432,6 +436,9 @@ tr.merchant-highlight td { background-color: #dbeafe !important; }
     <div class="nav-item" :class="{active: activePage==='審核列表'}" @click="activePage='審核列表'">
       <span class="nav-icon">📋</span>審核列表
     </div>
+    <div class="nav-item" :class="{active: activePage==='異常繳費'}" @click="activePage='異常繳費'">
+      <span class="nav-icon">⚠️</span>異常繳費
+    </div>
     <div class="nav-item" :class="{active: activePage==='流水帳查詢'}" @click="activePage='流水帳查詢'">
       <span class="nav-icon">🧾</span>流水帳查詢
     </div>
@@ -568,6 +575,97 @@ tr.merchant-highlight td { background-color: #dbeafe !important; }
               2. <strong>本票</strong>：加上年月日、新台幣金額。<br>
               3. <strong>發票人</strong>：加上年月日，且需要補到上面一頁。<br>
               4. 合約條款再加上：<span style="color:#e53935; font-weight:bold;">「分期付款期間未繳清以前禁止出售或典當，以免觸法」</span>（紅色字顯示）。
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 異常繳費 -->
+      <template v-if="activePage==='異常繳費'">
+        <div class="mgmt-toolbar">
+          <input class="search-input" v-model="abSearch" placeholder="搜尋受理編號、申請人" />
+          <span class="search-label">異常類型</span>
+          <select class="search-select" v-model="abTypeFilter">
+            <option value="">全部</option>
+            <option>重複繳費</option>
+          </select>
+          <span class="search-label">狀態</span>
+          <select class="search-select" v-model="abStatusFilter">
+            <option value="">全部</option>
+            <option>未處理</option>
+            <option>已處理</option>
+          </select>
+          <span class="search-label">匯款日期</span>
+          <input class="search-date" type="text" v-model="abDateFrom" placeholder="yyyy/mm/dd" maxlength="10" />
+          <span class="search-label">～</span>
+          <input class="search-date" type="text" v-model="abDateTo" placeholder="yyyy/mm/dd" maxlength="10" />
+          <button class="btn-reset" @click="resetAbFilters">重置</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>受理編號</th>
+                <th>申請人</th>
+                <th>特約商</th>
+                <th>異常類型</th>
+                <th>匯款日期</th>
+                <th>匯款金額</th>
+                <th>付款方式</th>
+                <th>原對應期數</th>
+                <th>沖帳期數</th>
+                <th>狀態</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(a, i) in filteredAb" :key="a.id">
+                <td>{{ i + 1 }}</td>
+                <td>
+                  <span class="link-name" @click="openAbCase(a)">{{ a.caseId }}</span>
+                </td>
+                <td>{{ a.applicant }}</td>
+                <td>{{ a.merchant }}</td>
+                <td><span class="status-badge status-dup">{{ a.type }}</span></td>
+                <td>{{ formatDate(a.remittanceDate.slice(0, 10)) }}</td>
+                <td style="font-weight:bold; color:#b8860b">NT$ {{ formatMoney(a.amount) }}</td>
+                <td>{{ a.payMethod }}</td>
+                <td>第 {{ a.originalPeriod }} 期</td>
+                <td>
+                  <template v-if="a.status === '已處理'">
+                    第 {{ a.offsetPeriod }} 期
+                  </template>
+                  <select v-else class="search-select" style="width:110px"
+                    v-model="a.pendingOffset">
+                    <option value="">選擇期數</option>
+                    <option v-for="p in abPeriodOptions(a)" :key="p" :value="p">第 {{ p }} 期</option>
+                  </select>
+                </td>
+                <td>
+                  <span class="status-badge" :class="a.status === '已處理' ? 'status-done' : 'status-pending'">
+                    {{ a.status }}
+                  </span>
+                </td>
+                <td>
+                  <button v-if="a.status === '未處理'" class="btn-sm btn-edit"
+                    @click="confirmAbOffset(a)">確認沖帳</button>
+                  <span v-else style="color:#888; font-size:12px">已沖帳</span>
+                </td>
+              </tr>
+              <tr v-if="filteredAb.length === 0">
+                <td colspan="12" style="color:#aaa; padding:20px">查無資料</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="sticky-note" style="margin-top:16px">
+          <div class="sticky-note-icon">📌</div>
+          <div class="sticky-note-content">
+            <div class="sticky-note-title">開發待辦</div>
+            <div class="sticky-note-text">
+              1. 沖帳期數只能選沒有沖帳過的期數。
             </div>
           </div>
         </div>
@@ -745,6 +843,21 @@ tr.merchant-highlight td { background-color: #dbeafe !important; }
           </div>
         </div>
 
+        <!-- 利息設定 -->
+        <div class="settings-card">
+          <h3>利息設定</h3>
+          <div class="setting-row" v-for="ir in sysSettings.interestRates" :key="ir.terms">
+            <label>{{ ir.terms }} 期</label>
+            <input type="number" v-model.number="ir.rate" min="0" step="0.1" />
+            <span class="unit">%</span>
+          </div>
+          <div class="setting-row" style="margin-bottom:0">
+            <label></label>
+            <button class="btn-save" @click="saveSettings">儲存設定</button>
+            <span class="save-hint" v-if="settingsSaved">✓ 已儲存</span>
+          </div>
+        </div>
+
         <!-- 產品名稱（下拉選項）管理 -->
         <div class="settings-card">
           <h3>前端產品名稱（下拉選項）</h3>
@@ -879,7 +992,7 @@ tr.merchant-highlight td { background-color: #dbeafe !important; }
       </template>
 
       <!-- 其他頁面（佔位） -->
-      <template v-if="activePage!=='審核列表' && activePage!=='黑名單管理' && activePage!=='利率管理' && activePage!=='系統設定' && activePage!=='統計儀表板'">
+      <template v-if="activePage!=='審核列表' && activePage!=='異常繳費' && activePage!=='黑名單管理' && activePage!=='利率管理' && activePage!=='系統設定' && activePage!=='統計儀表板'">
         <div class="placeholder-page">
           <div class="icon">🚧</div>
           <div>「{{ activePage }}」頁面開發中</div>
@@ -1094,9 +1207,6 @@ tr.merchant-highlight td { background-color: #dbeafe !important; }
                 <template v-if="inst.paid">已繳 {{ formatDate(inst.paidDate) }}</template>
               </div>
               <div class="amount">NT$ {{ formatMoney(inst.amount) }}</div>
-              <div v-if="inst.overdue" style="font-size:11px; color:#c62828; margin-top:2px">
-                逾期 {{ inst.overdueDays }} 天<span v-if="inst.overdueDays > 3">（+滯納金 500）</span>
-              </div>
               <button @click="openPaymentSlip(inst)"
                 style="margin-top:6px; width:100%; padding:3px 0; font-size:11px; cursor:pointer;
                        border-radius:3px; border:1px solid #9c5fb5; background:#f3e5f5;
@@ -1383,7 +1493,7 @@ createApp({
         relative1Name: '孫德明', relative1Relation: '父親', relative1Phone: '0923456789', friendName: '黃文傑', friendPhone: '0956789012',
         loanItem: '機車改裝', email: 'syt1991@gmail.com', contactTime: '11:00-13:00',
         docs: { id_front: true, id_back: true, health_card: true, selfie: false, selfie_back: false, guarantor: false, financial: false, other: false } },
-      { id: '202603260001', date: '2026-03-26', merchant: '鷹村工廠(S)',       applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'S方案',  statusClass: 'status-s',      sent: true,  rejected: false, audioUploaded: false, payment: '0/12',  note: '',       principal: 35000, rate: 12, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '',
+      { id: '202603260001', date: '2026-02-15', merchant: '鷹村工廠(S)',       applicant: '吳昀達', phone: '0918103852', idNumber: 'B234567890', status: 'S方案',  statusClass: 'status-s',      sent: true,  rejected: false, audioUploaded: false, payment: '1/12',  note: '',       principal: 30000, rate: 12, terms: 12, paidCount: 1, blacklisted: false, blacklistReason: '',
         birthday: '1988-03-22', registeredAddress: '台中市北屯區軍功路一段220號', mailingAddress: '台中市北屯區軍功路一段220號',
         relative1Name: '吳建國', relative1Relation: '父親', relative1Phone: '0972456789', friendName: '林俊賢', friendPhone: '0963789012',
         loanItem: '汽車精品配件', email: 'wyd1988@gmail.com', contactTime: '14:00-16:00',
@@ -1695,15 +1805,30 @@ td { border:1px solid #999; padding:5px 8px; }
     const finance = computed(() => {
       const s = selected.value;
       if (!s) return {};
+      const threshold = sysSettings.value.lateFeeThreshold;
+      const feeAmt = sysSettings.value.lateFeeAmount;
       const installmentsWithStatus = (s.installments || []).map(inst => {
-        if (inst.paid) return { ...inst, overdue: false, overdueDays: 0, statusClass: 'paid', statusText: '已繳' };
+        if (inst.paid) return { ...inst, overdue: false, overdueDays: 0, statusClass: 'paid', statusText: '已繳', hasLateFee: false, lateFee: 0 };
         const days = diffDays(TODAY, inst.dueDate);
-        if (days > 0) return { ...inst, overdue: true, overdueDays: days, statusClass: 'overdue', statusText: '逾期' };
-        return { ...inst, overdue: false, overdueDays: 0, statusClass: 'pending', statusText: '未繳' };
+        if (days > 0) {
+          const hasLateFee = days > threshold;
+          const lateFee = hasLateFee ? feeAmt : 0;
+          return {
+            ...inst,
+            amount: inst.amount + lateFee,
+            overdue: true,
+            overdueDays: days,
+            statusClass: 'overdue',
+            statusText: '逾期',
+            hasLateFee,
+            lateFee,
+          };
+        }
+        return { ...inst, overdue: false, overdueDays: 0, statusClass: 'pending', statusText: '未繳', hasLateFee: false, lateFee: 0 };
       });
       const paidCount = installmentsWithStatus.filter(x => x.paid).length;
       const overdueCount = installmentsWithStatus.filter(x => x.overdue).length;
-      const lateFee = installmentsWithStatus.some(x => x.overdue && x.overdueDays > 3) ? 500 : 0;
+      const lateFee = installmentsWithStatus.reduce((sum, x) => sum + (x.lateFee || 0), 0);
       const totalReceivable = s.monthlyPayment * s.terms + lateFee;
       const totalReceived = (s.remittances || []).reduce((sum, r) => sum + r.amount, 0);
       const totalInterest = s.monthlyPayment * s.terms - s.principal;
@@ -1866,6 +1991,13 @@ td { border:1px solid #999; padding:5px 8px; }
     const sysSettings = ref({
       lateFeeThreshold: 3,
       lateFeeAmount: 500,
+      interestRates: [
+        { terms: 3, rate: 3 },
+        { terms: 6, rate: 4 },
+        { terms: 12, rate: 5 },
+        { terms: 18, rate: 8 },
+        { terms: 24, rate: 9 },
+      ],
       products: ['S方案', 'A方案', 'B方案'],
     });
     const settingsSaved = ref(false);
@@ -1899,6 +2031,96 @@ td { border:1px solid #999; padding:5px 8px; }
       const name = editingProductName.value.trim();
       if (name) sysSettings.value.products[idx] = name;
       editingProductIdx.value = -1;
+    }
+
+    // ── 異常繳費 ──
+    const abnormalPayments = ref([
+      {
+        id: 1, caseId: '202603190001', applicant: '張軒維', merchant: '鷹村工廠(S)',
+        type: '重複繳費', remittanceDate: '2026-07-17 12:19:06', amount: 4250,
+        originalPeriod: 12, payMethod: '郵局', note: '第12期重複入帳',
+        status: '未處理', offsetPeriod: null, pendingOffset: '',
+      },
+      {
+        id: 2, caseId: '202603260001', applicant: '吳昀達', merchant: '鷹村工廠(S)',
+        type: '重複繳費', remittanceDate: '2026-04-10 15:42:18', amount: 2800,
+        originalPeriod: 1, payMethod: 'ATM', note: '第1期重複入帳',
+        status: '未處理', offsetPeriod: null, pendingOffset: '',
+      },
+      {
+        id: 3, caseId: '202603250002', applicant: '吳昀達', merchant: '鷹村工廠(B)',
+        type: '重複繳費', remittanceDate: '2026-04-18 09:11:33', amount: 2127,
+        originalPeriod: 1, payMethod: '臨櫃', note: '第1期重複入帳',
+        status: '已處理', offsetPeriod: 2, pendingOffset: '',
+      },
+      {
+        id: 4, caseId: '202603250001', applicant: '吳昀達', merchant: '手機分期',
+        type: '重複繳費', remittanceDate: '2026-04-05 11:28:44', amount: 1733,
+        originalPeriod: 1, payMethod: '網銀', note: '第1期重複入帳',
+        status: '未處理', offsetPeriod: null, pendingOffset: '',
+      },
+    ]);
+    const abSearch = ref('');
+    const abTypeFilter = ref('');
+    const abStatusFilter = ref('');
+    const abDateFrom = ref('');
+    const abDateTo = ref('');
+
+    const filteredAb = computed(() =>
+      abnormalPayments.value.filter(a => {
+        if (abSearch.value) {
+          const q = abSearch.value.trim();
+          if (!a.caseId.includes(q) && !a.applicant.includes(q)) return false;
+        }
+        if (abTypeFilter.value && a.type !== abTypeFilter.value) return false;
+        if (abStatusFilter.value && a.status !== abStatusFilter.value) return false;
+        const remDate = a.remittanceDate.slice(0, 10);
+        if (abDateFrom.value && remDate < toIso(abDateFrom.value)) return false;
+        if (abDateTo.value && remDate > toIso(abDateTo.value)) return false;
+        return true;
+      })
+    );
+
+    function resetAbFilters() {
+      abSearch.value = '';
+      abTypeFilter.value = '';
+      abStatusFilter.value = '';
+      abDateFrom.value = '';
+      abDateTo.value = '';
+    }
+
+    function abPeriodOptions(a) {
+      const row = rows.find(r => r.id === a.caseId);
+      const terms = row ? row.terms : 12;
+      const usedOffsets = new Set(
+        abnormalPayments.value
+          .filter(x => x.caseId === a.caseId && x.status === '已處理' && x.offsetPeriod != null)
+          .map(x => x.offsetPeriod)
+      );
+      const opts = [];
+      for (let i = 1; i <= terms; i++) {
+        if (i === a.originalPeriod) continue;
+        if (usedOffsets.has(i)) continue;
+        opts.push(i);
+      }
+      return opts;
+    }
+
+    function confirmAbOffset(a) {
+      if (!a.pendingOffset) {
+        alert('請先選擇沖帳對應的期數');
+        return;
+      }
+      const period = Number(a.pendingOffset);
+      if (!confirm(`確定將此筆重複繳費沖帳至第 ${period} 期？`)) return;
+      a.offsetPeriod = period;
+      a.status = '已處理';
+      a.pendingOffset = '';
+    }
+
+    function openAbCase(a) {
+      const row = rows.find(r => r.id === a.caseId);
+      if (row) openDetail(row);
     }
 
     // ── 統計儀表板 ──
@@ -1997,6 +2219,9 @@ td { border:1px solid #999; padding:5px 8px; }
       // 系統設定
       sysSettings, settingsSaved, newProductName, editingProductIdx, editingProductName,
       saveSettings, addProduct, deleteProduct, startEditProduct, saveProductEdit,
+      // 異常繳費
+      abnormalPayments, abSearch, abTypeFilter, abStatusFilter, abDateFrom, abDateTo,
+      filteredAb, resetAbFilters, abPeriodOptions, confirmAbOffset, openAbCase,
       // 統計儀表板
       dashDateFrom, dashDateTo, dashDetail, dashStats, exportDash,
     };
